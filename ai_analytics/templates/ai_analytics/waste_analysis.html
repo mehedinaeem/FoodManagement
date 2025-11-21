@@ -1,50 +1,195 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load ai_filters %}
 
-{% block title %}Waste Analysis{% endblock %}
+{% block title %}AI Waste Analysis{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.css" rel="stylesheet">
+<style>
+    .waste-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .waste-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .stat-badge {
+        font-size: 2rem;
+        font-weight: bold;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+    }
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin: 20px 0;
+    }
+    .comparison-bar {
+        height: 30px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        font-weight: 600;
+        color: white;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
             <h1 class="display-4 mb-3">
-                <i class="bi bi-exclamation-triangle-fill text-warning"></i> Waste Analysis
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i> AI Waste Estimation & Analysis
             </h1>
-            <p class="lead">AI-powered waste predictions and estimates</p>
+            <p class="lead">Comprehensive waste analysis with projections and community comparisons</p>
         </div>
     </div>
 
-    <!-- Waste Estimates -->
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="waste-card card shadow border-0 text-center">
+                <div class="card-body">
+                    <div class="stat-badge bg-warning text-dark">
+                        ${{ weekly_waste.total_waste_cost|floatformat:2 }}
+                    </div>
+                    <p class="mt-2 mb-0"><strong>Weekly Waste Cost</strong></p>
+                    <small class="text-muted">{{ weekly_waste.total_waste_grams|floatformat:0 }}g</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="waste-card card shadow border-0 text-center">
+                <div class="card-body">
+                    <div class="stat-badge bg-danger text-white">
+                        ${{ monthly_waste.projected_waste_cost|floatformat:2 }}
+                    </div>
+                    <p class="mt-2 mb-0"><strong>Monthly Projected</strong></p>
+                    <small class="text-muted">{{ monthly_waste.projected_waste_grams|floatformat:0 }}g</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="waste-card card shadow border-0 text-center">
+                <div class="card-body">
+                    <div class="stat-badge {% if community_comparison.weekly.status == 'better' %}bg-success{% elif community_comparison.weekly.status == 'worse' %}bg-danger{% else %}bg-info{% endif %} text-white">
+                        {% if community_comparison.weekly.percentage_difference > 0 %}+{% endif %}{{ community_comparison.weekly.percentage_difference|floatformat:1 }}%
+                    </div>
+                    <p class="mt-2 mb-0"><strong>vs Community</strong></p>
+                    <small class="text-muted">Weekly comparison</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="waste-card card shadow border-0 text-center">
+                <div class="card-body">
+                    <div class="stat-badge bg-info text-white">
+                        {{ waste_projection|length }} weeks
+                    </div>
+                    <p class="mt-2 mb-0"><strong>Projection Period</strong></p>
+                    <small class="text-muted">Future estimates</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waste Breakdown Charts -->
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card shadow border-0 mb-3">
+            <div class="card shadow-lg border-0 waste-card">
                 <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0">Weekly Waste Estimate</h5>
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart-fill"></i> Weekly Waste Breakdown
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <h2 class="text-danger">${{ weekly_waste.total_waste_cost|floatformat:2 }}</h2>
-                    <p class="text-muted">{{ weekly_waste.total_waste_grams|floatformat:0 }} grams</p>
-                    <hr>
-                    <small class="text-muted">
-                        Expired items: ${{ weekly_waste.expired_waste_cost|floatformat:2 }}<br>
-                        Pattern-based: ${{ weekly_waste.pattern_waste_cost|floatformat:2 }}
-                    </small>
+                    <div class="chart-container">
+                        <canvas id="weeklyWasteChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card shadow border-0 mb-3">
+            <div class="card shadow-lg border-0 waste-card">
                 <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">Monthly Waste Estimate</h5>
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart-fill"></i> Waste Projection Trend
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <h2 class="text-danger">${{ monthly_waste.projected_waste_cost|floatformat:2 }}</h2>
-                    <p class="text-muted">{{ monthly_waste.projected_waste_grams|floatformat:0 }} grams</p>
+                    <div class="chart-container">
+                        <canvas id="projectionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Waste Estimates -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow border-0 waste-card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Weekly Waste Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Expired Items:</strong>
+                            <p class="h4 text-danger">${{ weekly_waste.expired_waste_cost|floatformat:2 }}</p>
+                            <small class="text-muted">{{ weekly_waste.expired_waste_grams|floatformat:0 }}g</small>
+                        </div>
+                        <div class="col-6">
+                            <strong>Pattern-Based:</strong>
+                            <p class="h4 text-warning">${{ weekly_waste.pattern_waste_cost|floatformat:2 }}</p>
+                            <small class="text-muted">{{ weekly_waste.pattern_waste_grams|floatformat:0 }}g</small>
+                        </div>
+                    </div>
                     <hr>
-                    <small class="text-muted">
-                        Actual waste: ${{ monthly_waste.actual_waste_cost|floatformat:2 }}<br>
-                        Projected: ${{ monthly_waste.projected_waste_cost|floatformat:2 }}
-                    </small>
+                    <div class="text-center">
+                        <h3 class="text-danger">Total: ${{ weekly_waste.total_waste_cost|floatformat:2 }}</h3>
+                        <p class="text-muted mb-0">{{ weekly_waste.total_waste_grams|floatformat:0 }} grams</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow border-0 waste-card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Monthly Waste Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Actual Waste:</strong>
+                            <p class="h4">${{ monthly_waste.actual_waste_cost|floatformat:2 }}</p>
+                            <small class="text-muted">{{ monthly_waste.actual_waste_grams|floatformat:0 }}g</small>
+                        </div>
+                        <div class="col-6">
+                            <strong>Projected:</strong>
+                            <p class="h4 text-danger">${{ monthly_waste.projected_waste_cost|floatformat:2 }}</p>
+                            <small class="text-muted">{{ monthly_waste.projected_waste_grams|floatformat:0 }}g</small>
+                        </div>
+                    </div>
+                    {% if monthly_waste.trend_direction %}
+                    <hr>
+                    <div class="text-center">
+                        <p class="mb-0">
+                            <strong>Trend:</strong> 
+                            <span class="badge {% if monthly_waste.trend_direction == 'improving' %}bg-success{% elif monthly_waste.trend_direction == 'worsening' %}bg-danger{% else %}bg-info{% endif %}">
+                                {{ monthly_waste.trend_direction|title }}
+                            </span>
+                        </p>
+                        <small class="text-muted">Factor: {{ monthly_waste.trend_factor|floatformat:2 }}</small>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -53,54 +198,198 @@
     <!-- Community Comparison -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow border-0">
+            <div class="card shadow-lg border-0 waste-card">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Community Comparison</h5>
+                    <h5 class="mb-0">
+                        <i class="bi bi-people-fill"></i> Community Comparison
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <h6>Weekly Comparison</h6>
-                            <p>
-                                Your waste: {{ community_comparison.weekly.user_grams|floatformat:0 }}g 
-                                (${{ community_comparison.weekly.user_cost|floatformat:2 }})
-                            </p>
-                            <p>
-                                Community average: {{ community_comparison.weekly.community_grams|floatformat:0 }}g 
-                                (${{ community_comparison.weekly.community_cost|floatformat:2 }})
-                            </p>
-                            {% if community_comparison.weekly.percentage_difference > 0 %}
-                            <div class="alert alert-warning">
-                                You're wasting {{ community_comparison.weekly.percentage_difference|floatformat:1 }}% more than average
+                        <!-- Weekly Comparison -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="mb-3">Weekly Comparison</h6>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Your Waste</span>
+                                    <strong>{{ community_comparison.weekly.user_grams|floatformat:0 }}g (${{ community_comparison.weekly.user_cost|floatformat:2 }})</strong>
+                                </div>
+                                <div class="comparison-bar bg-primary" style="width: {% widthratio community_comparison.weekly.user_grams community_comparison.weekly.community_grams 100 %}%;">
+                                    You
+                                </div>
                             </div>
-                            {% else %}
-                            <div class="alert alert-success">
-                                You're wasting {{ community_comparison.weekly.percentage_difference|floatformat:1 }}% less than average! Great job!
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Community Average</span>
+                                    <strong>{{ community_comparison.weekly.community_grams|floatformat:0 }}g (${{ community_comparison.weekly.community_cost|floatformat:2 }})</strong>
+                                </div>
+                                <div class="comparison-bar bg-secondary" style="width: 100%;">
+                                    Community
+                                </div>
                             </div>
-                            {% endif %}
+                            
+                            <div class="alert {% if community_comparison.weekly.status == 'better' %}alert-success{% elif community_comparison.weekly.status == 'worse' %}alert-warning{% else %}alert-info{% endif %}">
+                                <strong>
+                                    {% if community_comparison.weekly.status == 'better' %}
+                                    <i class="bi bi-check-circle"></i> You're doing better!
+                                    {% elif community_comparison.weekly.status == 'worse' %}
+                                    <i class="bi bi-exclamation-triangle"></i> Above average
+                                    {% else %}
+                                    <i class="bi bi-equal"></i> On par with average
+                                    {% endif %}
+                                </strong>
+                                <br>
+                                {% if community_comparison.weekly.percentage_difference > 0 %}
+                                You're wasting {{ community_comparison.weekly.percentage_difference|floatformat:1 }}% more than the community average.
+                                {% elif community_comparison.weekly.percentage_difference < 0 %}
+                                You're wasting {{ community_comparison.weekly.percentage_difference|abs|floatformat:1 }}% less than the community average! Great job!
+                                {% else %}
+                                Your waste matches the community average.
+                                {% endif %}
+                                <br>
+                                <small>
+                                    Difference: {{ community_comparison.weekly.difference_grams|floatformat:0 }}g 
+                                    (${{ community_comparison.weekly.difference_cost|floatformat:2 }})
+                                </small>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h6>Monthly Comparison</h6>
-                            <p>
-                                Your projected waste: {{ community_comparison.monthly.user_grams|floatformat:0 }}g 
-                                (${{ community_comparison.monthly.user_cost|floatformat:2 }})
-                            </p>
-                            <p>
-                                Community average: {{ community_comparison.monthly.community_grams|floatformat:0 }}g 
-                                (${{ community_comparison.monthly.community_cost|floatformat:2 }})
-                            </p>
+                        
+                        <!-- Monthly Comparison -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="mb-3">Monthly Comparison</h6>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Your Projected</span>
+                                    <strong>{{ community_comparison.monthly.user_grams|floatformat:0 }}g (${{ community_comparison.monthly.user_cost|floatformat:2 }})</strong>
+                                </div>
+                                <div class="comparison-bar bg-primary" style="width: {% widthratio community_comparison.monthly.user_grams community_comparison.monthly.community_grams 100 %}%;">
+                                    You
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Community Average</span>
+                                    <strong>{{ community_comparison.monthly.community_grams|floatformat:0 }}g (${{ community_comparison.monthly.community_cost|floatformat:2 }})</strong>
+                                </div>
+                                <div class="comparison-bar bg-secondary" style="width: 100%;">
+                                    Community
+                                </div>
+                            </div>
+                            
+                            <div class="alert {% if community_comparison.monthly.status == 'better' %}alert-success{% elif community_comparison.monthly.status == 'worse' %}alert-warning{% else %}alert-info{% endif %}">
+                                <strong>Monthly Status:</strong> {{ community_comparison.monthly.status|title }}
+                                <br>
+                                <small>
+                                    Difference: {{ community_comparison.monthly.difference_grams|floatformat:0 }}g 
+                                    (${{ community_comparison.monthly.difference_cost|floatformat:2 }})
+                                </small>
+                            </div>
                         </div>
                     </div>
+                    
+                    <!-- Category Breakdown -->
+                    {% if community_comparison.by_category %}
+                    <hr>
+                    <h6 class="mb-3">Category Breakdown</h6>
+                    <div class="row">
+                        {% for category, data in community_comparison.by_category.items %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-3">
+                                    <h6 class="mb-2">{{ category|title }}</h6>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small>You: {{ data.user_grams|floatformat:0 }}g</small>
+                                        <small>Community: {{ data.community_grams|floatformat:0 }}g</small>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar {% if data.difference_grams > 0 %}bg-danger{% else %}bg-success{% endif %}" 
+                                             style="width: {% widthratio data.user_grams data.community_grams 100 %}%">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        {% if data.difference_grams > 0 %}
+                                        +{{ data.difference_grams|floatformat:0 }}g more
+                                        {% else %}
+                                        {{ data.difference_grams|floatformat:0 }}g less
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Waste Projection Table -->
+    {% if waste_projection %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 waste-card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i> {{ waste_projection|length }}-Week Waste Projection
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Week</th>
+                                    <th>Date</th>
+                                    <th>Weekly Waste (grams)</th>
+                                    <th>Weekly Cost</th>
+                                    <th>Cumulative Grams</th>
+                                    <th>Cumulative Cost</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for proj in waste_projection %}
+                                <tr>
+                                    <td><strong>Week {{ proj.week }}</strong></td>
+                                    <td>{{ proj.date|date:"M d, Y" }}</td>
+                                    <td>{{ proj.projected_grams|floatformat:0 }}g</td>
+                                    <td>${{ proj.projected_cost|floatformat:2 }}</td>
+                                    <td><strong>{{ proj.cumulative_grams|floatformat:0 }}g</strong></td>
+                                    <td><strong>${{ proj.cumulative_cost|floatformat:2 }}</strong></td>
+                                    <td>
+                                        <span class="badge {% if proj.trend_factor < 1.0 %}bg-success{% elif proj.trend_factor > 1.0 %}bg-danger{% else %}bg-info{% endif %}">
+                                            {{ proj.trend_factor|floatformat:2 }}x
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-primary">
+                                    <th colspan="4">Total Projected ({{ waste_projection|length }} weeks)</th>
+                                    <th>{{ waste_projection|last.cumulative_grams|floatformat:0 }}g</th>
+                                    <th>${{ waste_projection|last.cumulative_cost|floatformat:2 }}</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Waste Predictions -->
     {% if waste_predictions %}
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow border-0">
+            <div class="card shadow-lg border-0 waste-card">
                 <div class="card-header bg-danger text-white">
                     <h5 class="mb-0">Items at Risk of Waste (Next 7 Days)</h5>
                 </div>
@@ -125,11 +414,7 @@
                                     <td>
                                         <div class="progress" style="height: 25px;">
                                             <div class="progress-bar {% if pred.predicted_waste_probability > 70 %}bg-danger{% elif pred.predicted_waste_probability > 40 %}bg-warning{% else %}bg-info{% endif %}" 
-                                                 role="progressbar" 
-                                                 style="width: {{ pred.predicted_waste_probability }}%"
-                                                 aria-valuenow="{{ pred.predicted_waste_probability }}" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
+                                                 style="width: {{ pred.predicted_waste_probability }}%">
                                                 {{ pred.predicted_waste_probability }}%
                                             </div>
                                         </div>
@@ -152,42 +437,143 @@
     </div>
     {% endif %}
 
-    <!-- Waste Projection -->
-    {% if waste_projection %}
+    <!-- Yearly Estimate -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow border-0">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">4-Week Waste Projection</h5>
+            <div class="card shadow-lg border-0 waste-card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-year"></i> Yearly Waste Projection
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Week</th>
-                                    <th>Date</th>
-                                    <th>Projected Waste (grams)</th>
-                                    <th>Projected Cost</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for proj in waste_projection %}
-                                <tr>
-                                    <td>Week {{ proj.week }}</td>
-                                    <td>{{ proj.date|date:"M d, Y" }}</td>
-                                    <td>{{ proj.projected_grams|floatformat:0 }}g</td>
-                                    <td>${{ proj.projected_cost|floatformat:2 }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h3 class="text-danger">${{ yearly_waste.projected_cost|floatformat:2 }}</h3>
+                            <p class="text-muted">Your Projected Yearly Cost</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-secondary">${{ yearly_waste.community_cost|floatformat:2 }}</h3>
+                            <p class="text-muted">Community Average</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="{% if yearly_waste.projected_cost > yearly_waste.community_cost %}text-danger{% else %}text-success{% endif %}">
+                                ${{ yearly_waste.projected_cost|subtract:yearly_waste.community_cost|floatformat:2 }}
+                            </h3>
+                            <p class="text-muted">Difference</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-md-6">
+                            <p><strong>Your Projected:</strong> {{ yearly_waste.projected_grams|floatformat:0 }}g</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Community Average:</strong> {{ yearly_waste.community_grams|floatformat:0 }}g</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Weekly Waste Breakdown Chart
+    const weeklyCtx = document.getElementById('weeklyWasteChart');
+    if (weeklyCtx) {
+        const weeklyData = {
+            labels: ['Expired Items', 'Pattern-Based'],
+            datasets: [{
+                label: 'Waste (grams)',
+                data: [
+                    {{ weekly_waste.expired_waste_grams|floatformat:0 }},
+                    {{ weekly_waste.pattern_waste_grams|floatformat:0 }}
+                ],
+                backgroundColor: [
+                    'rgba(220, 53, 69, 0.6)',
+                    'rgba(255, 193, 7, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(220, 53, 69, 1)',
+                    'rgba(255, 193, 7, 1)'
+                ],
+                borderWidth: 2
+            }]
+        };
+        new Chart(weeklyCtx, {
+            type: 'doughnut',
+            data: weeklyData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Weekly Waste Breakdown'
+                    }
+                }
+            }
+        });
+    }
+
+    // Projection Trend Chart
+    const projectionCtx = document.getElementById('projectionChart');
+    if (projectionCtx && {{ waste_projection|length }} > 0) {
+        const projectionData = {
+            labels: [{% for proj in waste_projection %}'Week {{ proj.week }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Projected Waste (grams)',
+                data: [{% for proj in waste_projection %}{{ proj.projected_grams|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Cumulative Waste (grams)',
+                data: [{% for proj in waste_projection %}{{ proj.cumulative_grams|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: 'rgba(255, 193, 7, 1)',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        };
+        new Chart(projectionCtx, {
+            type: 'line',
+            data: projectionData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Waste Projection Trend'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Grams'
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -17,3 +17,12 @@ def replace(value, arg):
     old, new = arg.split(',')
     return value.replace(old, new)
 
+
+@register.filter
+def subtract(value, arg):
+    """Subtract arg from value."""
+    try:
+        return float(value) - float(arg)
+    except (ValueError, TypeError):
+        return 0
+

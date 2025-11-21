@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load ai_filters %}
 
 {% block title %}Meal Plan Result{% endblock %}
 
@@ -14,6 +15,56 @@
         </div>
     </div>
 
+    <!-- Budget & Optimization Method -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-currency-dollar"></i> Budget Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Budget Limit:</span>
+                        <strong>${{ meal_plan.budget_limit|floatformat:2 }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Estimated Cost:</span>
+                        <strong class="{% if meal_plan.budget_used > meal_plan.budget_limit %}text-danger{% else %}text-success{% endif %}">
+                            ${{ meal_plan.budget_used|floatformat:2 }}
+                        </strong>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar {% if meal_plan.budget_used > meal_plan.budget_limit %}bg-danger{% else %}bg-success{% endif %}" 
+                             style="width: {% widthratio meal_plan.budget_used meal_plan.budget_limit 100 %}%">
+                            {% widthratio meal_plan.budget_used meal_plan.budget_limit 100 %}%
+                        </div>
+                    </div>
+                    {% if meal_plan.budget_used > meal_plan.budget_limit %}
+                    <div class="alert alert-warning mt-2 mb-0">
+                        <small>Over budget by ${{ meal_plan.budget_used|subtract:meal_plan.budget_limit|floatformat:2 }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Optimization Stats</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Method:</strong> {{ optimization_method|default:"Rule-Based" }}</p>
+                    <p><strong>Items from Inventory:</strong> {{ meal_plan.waste_reduction }}</p>
+                    <p><strong>Waste Reduction:</strong> 
+                        <span class="badge bg-success">
+                            {{ meal_plan.waste_reduction }} items saved from expiration
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Nutrition Summary -->
     <div class="row mb-4">
         <div class="col-12">
@@ -23,21 +74,29 @@
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
-                        <div class="col-md-3">
-                            <h4>{{ meal_plan.nutrition_summary.calories|floatformat:0 }}</h4>
+                        <div class="col-md-2">
+                            <h4>{{ meal_plan.nutrition_summary.calories|default:0|floatformat:0 }}</h4>
                             <p class="text-muted">Calories</p>
                         </div>
-                        <div class="col-md-3">
-                            <h4>{{ meal_plan.nutrition_summary.protein|floatformat:1 }}g</h4>
+                        <div class="col-md-2">
+                            <h4>{{ meal_plan.nutrition_summary.protein|default:0|floatformat:1 }}g</h4>
                             <p class="text-muted">Protein</p>
                         </div>
-                        <div class="col-md-3">
-                            <h4>{{ meal_plan.nutrition_summary.fiber|floatformat:1 }}g</h4>
+                        <div class="col-md-2">
+                            <h4>{{ meal_plan.nutrition_summary.fiber|default:0|floatformat:1 }}g</h4>
                             <p class="text-muted">Fiber</p>
                         </div>
-                        <div class="col-md-3">
-                            <h4>{{ meal_plan.nutrition_summary.vitamins|floatformat:0 }}</h4>
+                        <div class="col-md-2">
+                            <h4>{{ meal_plan.nutrition_summary.vitamins|default:0|floatformat:0 }}</h4>
                             <p class="text-muted">Vitamins</p>
+                        </div>
+                        <div class="col-md-2">
+                            <h4>{{ meal_plan.nutrition_summary.iron|default:0|floatformat:1 }}mg</h4>
+                            <p class="text-muted">Iron</p>
+                        </div>
+                        <div class="col-md-2">
+                            <h4>{{ meal_plan.nutrition_summary.calcium|default:0|floatformat:0 }}mg</h4>
+                            <p class="text-muted">Calcium</p>
                         </div>
                     </div>
                 </div>
@@ -100,6 +159,39 @@
         </div>
     </div>
 
+    <!-- Cost Alternatives -->
+    {% if meal_plan.alternatives_suggested %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightbulb"></i> Cost-Saving Alternatives Suggested
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for suggestion in meal_plan.alternatives_suggested %}
+                    <div class="alert alert-info">
+                        <strong>{{ suggestion.original }}</strong> (${{ suggestion.original_cost|floatformat:2 }})
+                        <br>
+                        <small>Consider these alternatives to save up to ${{ suggestion.potential_savings|floatformat:2 }}:</small>
+                        <ul class="mb-0 mt-2">
+                            {% for alt in suggestion.alternatives %}
+                            <li>
+                                <strong>{{ alt.name }}</strong> ({{ alt.category|title }}) - 
+                                ${{ alt.cost|floatformat:2 }} 
+                                <span class="badge bg-success">Save ${{ alt.estimated_savings|floatformat:2 }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Shopping List -->
     {% if meal_plan.shopping_list %}
     <div class="row mb-4">
@@ -120,6 +212,7 @@
                                     <th>Quantity</th>
                                     <th>Category</th>
                                     <th>Estimated Cost</th>
+                                    <th>Alternatives</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -129,6 +222,23 @@
                                     <td>{{ item.quantity }} {{ item.unit }}</td>
                                     <td><span class="badge bg-secondary">{{ item.category|title }}</span></td>
                                     <td>${{ item.estimated_cost|floatformat:2 }}</td>
+                                    <td>
+                                        {% if item.alternatives %}
+                                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#alt-{{ forloop.counter }}">
+                                            View Alternatives
+                                        </button>
+                                        <div class="collapse mt-2" id="alt-{{ forloop.counter }}">
+                                            {% for alt in item.alternatives %}
+                                            <div class="small">
+                                                <strong>{{ alt.name }}</strong> - ${{ alt.cost|floatformat:2 }}
+                                                <span class="badge bg-success">Save ${{ alt.estimated_savings|floatformat:2 }}</span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -136,6 +246,7 @@
                                 <tr class="table-primary">
                                     <th colspan="3">Total Estimated Cost</th>
                                     <th>${{ meal_plan.total_cost|floatformat:2 }}</th>
+                                    <th></th>
                                 </tr>
                             </tfoot>
                         </table>

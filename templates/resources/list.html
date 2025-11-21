@@ -107,6 +107,55 @@
     </div>
 </div>
 
+<!-- Personalized Recommendations Based on Your Items -->
+{% if has_filter and personalized_recommendations %}
+<div class="card mb-4 shadow-lg" style="border-left: 5px solid #28a745;">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-lightbulb-fill"></i> Recommended for You
+            <small class="ms-2">Based on items you've entered</small>
+        </h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i> These resources are recommended based on the items you've logged in your consumption history and inventory.
+        </p>
+        <div class="row g-3">
+            {% for resource, category, explanation in personalized_recommendations %}
+            <div class="col-md-6">
+                <div class="card h-100 border-success">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-2">
+                            <i class="bi {{ resource.get_type_icon }} text-success me-2" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1">{{ resource.title }}</h6>
+                                <div class="mb-2">
+                                    <span class="badge bg-success">
+                                        {{ resource.get_category_display }}
+                                    </span>
+                                    <span class="badge bg-light text-dark ms-1">
+                                        {{ resource.get_resource_type_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="card-text small text-muted mb-2">{{ resource.description|truncatewords:20 }}</p>
+                        <div class="alert alert-info small mb-2 py-2">
+                            <i class="bi bi-check-circle"></i> <strong>Why recommended:</strong><br>
+                            <small>{{ explanation }}</small>
+                        </div>
+                        <a href="{% url 'resources:detail' resource.pk %}" class="btn btn-sm btn-success">
+                            <i class="bi bi-arrow-right"></i> View Resource
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Resources List -->
 {% if resources %}
 <div class="row g-4">

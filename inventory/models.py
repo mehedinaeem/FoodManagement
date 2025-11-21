@@ -173,3 +173,31 @@ class InventoryItem(models.Model):
         elif self.status != 'consumed':
             self.status = 'fresh'
         self.save()
+
+
+class ExpirationEmailNotification(models.Model):
+    """
+    Track expiration email notifications to avoid duplicates.
+    """
+    inventory_item = models.ForeignKey(
+        InventoryItem, 
+        on_delete=models.CASCADE, 
+        related_name='email_notifications'
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='expiration_emails')
+    sent_date = models.DateField(auto_now_add=True, help_text="Date when email was sent")
+    days_before_expiry = models.IntegerField(help_text="Days before expiration when email was sent")
+    email_sent = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Expiration Email Notification"
+        verbose_name_plural = "Expiration Email Notifications"
+        unique_together = ['inventory_item', 'days_before_expiry']
+        indexes = [
+            models.Index(fields=['user', 'sent_date']),
+            models.Index(fields=['inventory_item', 'days_before_expiry']),
+        ]
+    
+    def __str__(self):
+        return f"Email for {self.inventory_item.item_name} - {self.days_before_expiry} days before expiry"

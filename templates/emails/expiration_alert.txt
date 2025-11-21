@@ -1,0 +1,43 @@
+FOOD EXPIRATION ALERT
+=====================
+
+Hello {{ user.profile.full_name|default:user.username }},
+
+{% if is_expired %}
+🚨 URGENT: You have {{ items|length }} item{{ items|length|pluralize }} that HAVE EXPIRED in your inventory!
+
+We wanted to alert you about the following items that have already expired:
+{% else %}
+⚠️ IMPORTANT: You have {{ items|length }} item{{ items|length|pluralize }} expiring soon in your inventory!
+
+We wanted to remind you about the following items that are expiring within the next few days:
+{% endif %}
+
+{% for item in items %}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{ item.item_name }}
+{% if is_expired %}🚨 EXPIRED {{ item.days_expired }} day{{ item.days_expired|pluralize }} ago{% elif item.days_until_expiry == 0 %}⚠️ EXPIRES TODAY!{% elif item.days_until_expiry == 1 %}⚠️ Expires Tomorrow{% else %}⚠️ {{ item.days_until_expiry }} days left{% endif %}
+
+Category: {{ item.get_category_display }}
+Quantity: {{ item.quantity }} {{ item.get_unit_display }}
+Expiration Date: {{ item.expiration_date|date:"F d, Y" }}
+{% if item.notes %}Notes: {{ item.notes }}{% endif %}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{% endfor %}
+
+💡 Tips to Reduce Waste:
+- Plan meals using these items first
+- Consider freezing items that can be frozen
+- Share with family or neighbors if you can't use them
+- Check our AI meal optimizer for recipe suggestions
+
+View Your Inventory: {{ site_url }}{% url 'inventory:list' %}
+View AI Risk Analysis: {{ site_url }}{% url 'ai_analytics:expiration_risks' %}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This is an automated notification from Food Management System.
+You're receiving this because you have items in your inventory with expiration dates.
+
+To manage your email preferences, visit your profile: {{ site_url }}{% url 'accounts:profile' %}
+

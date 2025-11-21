@@ -42,14 +42,30 @@
                                 The optimizer will try to create a meal plan within this budget.
                             </small>
                         </div>
+                        {% if has_openai %}
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="use_llm" name="use_llm" value="true">
+                                <label class="form-check-label" for="use_llm">
+                                    <strong>Use AI Optimization</strong> <span class="badge bg-success">Available</span>
+                                </label>
+                            </div>
+                            <small class="text-muted">Enable AI-powered optimization for better meal planning (uses OpenAI GPT)</small>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-info-circle"></i> AI optimization not available. Using rule-based optimization.
+                        </div>
+                        {% endif %}
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i> 
                             <strong>How it works:</strong>
                             <ul class="mb-0 mt-2">
                                 <li>Prioritizes using items from your inventory (especially expiring ones)</li>
                                 <li>Ensures minimum nutrition requirements are met</li>
-                                <li>Suggests items from the food database to fill gaps</li>
+                                <li>Suggests cost-effective alternatives based on local prices</li>
                                 <li>Provides a shopping list with estimated costs</li>
+                                <li>Optimizes for budget constraints</li>
                             </ul>
                         </div>
                         <button type="submit" class="btn btn-success btn-lg w-100">

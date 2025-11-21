@@ -10,15 +10,23 @@ from .tracking import TrackingAnalyzer
 def resource_list(request):
     """
     Display list of resources with filtering options.
+    Shows personalized recommendations based on user's entered items when filters are applied.
     """
     resources = Resource.objects.all()
     filter_form = ResourceFilterForm(request.GET)
+    
+    # Get selected filters
+    selected_category = None
+    selected_type = None
     
     # Apply filters
     if filter_form.is_valid():
         category = filter_form.cleaned_data.get('category')
         resource_type = filter_form.cleaned_data.get('resource_type')
         search = filter_form.cleaned_data.get('search')
+        
+        selected_category = category
+        selected_type = resource_type
         
         if category:
             resources = resources.filter(category=category)
@@ -29,6 +37,17 @@ def resource_list(request):
                 Q(title__icontains=search) |
                 Q(description__icontains=search)
             )
+    
+    # Get personalized recommendations based on user's entered items
+    # Only show recommendations when a filter is selected
+    personalized_recommendations = []
+    if selected_category or selected_type:
+        analyzer = TrackingAnalyzer(request.user)
+        personalized_recommendations = analyzer.get_recommendations(
+            limit=5,
+            resource_category_filter=selected_category,
+            resource_type_filter=selected_type
+        )
     
     # Get featured resources
     featured_resources = resources.filter(featured=True)[:3]
@@ -62,6 +81,8 @@ def resource_list(request):
         'category_stats': category_stats,
         'type_stats': type_stats,
         'resources_by_category': resources_by_category,
+        'personalized_recommendations': personalized_recommendations,
+        'has_filter': bool(selected_category or selected_type),
     }
     
     return render(request, 'resources/list.html', context)

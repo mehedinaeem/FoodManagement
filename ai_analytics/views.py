@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -12,6 +13,7 @@ from .waste_estimator import WasteEstimator
 from .sdg_scorer import SDGImpactScorer
 from .chatbot import NourishBot
 from .ocr_processor import OCRProcessor
+from .expiration_predictor import ExpirationRiskPredictor
 from .models import ConsumptionPattern, WastePrediction, NutrientGap, SDGImpactScore, ChatSession
 from uploads.models import Upload
 from inventory.models import InventoryItem
@@ -138,10 +140,13 @@ def consumption_patterns(request):
 @login_required
 def waste_analysis(request):
     """
-    Display waste analysis and predictions.
+    Display comprehensive waste analysis with projections and comparisons.
     """
     analyzer = AIConsumptionAnalyzer(request.user)
     waste_estimator = WasteEstimator(request.user)
+    
+    # Check if ML should be used
+    use_ml = request.GET.get('use_ml', 'false') == 'true'
     
     # Get predictions
     waste_predictions = analyzer.predict_waste_risk(days_ahead=7)
@@ -161,10 +166,16 @@ def waste_analysis(request):
         )
     
     # Get waste estimates
-    weekly_waste = waste_estimator.estimate_weekly_waste()
-    monthly_waste = waste_estimator.estimate_monthly_waste()
+    weekly_waste = waste_estimator.estimate_weekly_waste(use_ml=use_ml)
+    monthly_waste = waste_estimator.estimate_monthly_waste(use_ml=use_ml)
     community_comparison = waste_estimator.compare_to_community()
-    waste_projection = waste_estimator.generate_waste_projection(weeks=4)
+    
+    # Get projections (12 weeks)
+    weeks_ahead = int(request.GET.get('weeks', 12))
+    waste_projection = waste_estimator.generate_waste_projection(weeks=weeks_ahead, use_ml=use_ml)
+    
+    # Get yearly estimate
+    yearly_waste = waste_estimator.estimate_yearly_waste()
     
     context = {
         'waste_predictions': waste_predictions,
@@ -172,6 +183,10 @@ def waste_analysis(request):
         'monthly_waste': monthly_waste,
         'community_comparison': community_comparison,
         'waste_projection': waste_projection,
+        'yearly_waste': yearly_waste,
+        'weeks_ahead': weeks_ahead,
+        'use_ml': use_ml,
+        'has_ml': waste_estimator._has_ml_api(),
     }
     
     return render(request, 'ai_analytics/waste_analysis.html', context)
@@ -186,16 +201,22 @@ def meal_optimizer(request):
     
     if request.method == 'POST':
         budget_limit = request.POST.get('budget_limit')
+        use_llm = request.POST.get('use_llm', 'false') == 'true'
+        
         if budget_limit:
             budget_limit = float(budget_limit)
         else:
             budget_limit = None
         
-        meal_plan = optimizer.optimize_weekly_meal_plan(budget_limit=budget_limit)
+        meal_plan = optimizer.optimize_weekly_meal_plan(
+            budget_limit=budget_limit,
+            use_llm=use_llm
+        )
         
         context = {
             'meal_plan': meal_plan,
             'budget_limit': budget_limit,
+            'optimization_method': meal_plan.get('optimization_method', 'Rule-Based'),
         }
         
         return render(request, 'ai_analytics/meal_plan_result.html', context)
@@ -206,8 +227,12 @@ def meal_optimizer(request):
     budget_range = profile.budget_range if profile else 'medium'
     default_budget = budget_map.get(budget_range, 75)
     
+    # Check if LLM is available
+    has_openai = optimizer._has_openai_key()
+    
     context = {
         'default_budget': default_budget,
+        'has_openai': has_openai,
     }
     
     return render(request, 'ai_analytics/meal_optimizer.html', context)
@@ -278,42 +303,82 @@ def chatbot(request):
 def process_ocr(request, upload_id):
     """
     Process uploaded image with OCR.
+    Supports automatic addition for high-confidence extractions.
     """
     upload = get_object_or_404(Upload, id=upload_id, user=request.user)
     processor = OCRProcessor(upload)
     
     use_google_vision = request.GET.get('use_google', 'false') == 'true'
+    auto_add = request.GET.get('auto_add', 'false') == 'true'
+    
+    # Process OCR
     result = processor.extract_food_data(use_google_vision=use_google_vision)
     
+    # Handle automatic addition for high-confidence extractions
+    if auto_add and result.get('success') and result.get('confidence', 0) >= 80:
+        extracted = result.get('extracted_data', {})
+        create_result = processor.create_inventory_item(
+            request.user, 
+            extracted, 
+            auto_add=True
+        )
+        
+        if create_result.get('auto_added'):
+            messages.success(request, 'Item automatically added to inventory!')
+            return redirect('inventory:detail', pk=create_result['item'].id)
+    
+    # Handle POST (user confirmation)
     if request.method == 'POST':
-        # User confirmed extraction
         if result.get('success'):
-            extracted = result['extracted_data']
-            # Allow user to edit before creating
-            item_data = processor.create_inventory_item_from_extraction(extracted, confirm=True)
+            extracted = result.get('extracted_data', {})
+            
+            # Get form data (user may have edited)
+            item_name = request.POST.get('item_name', extracted.get('item_name', ''))
+            quantity = request.POST.get('quantity', extracted.get('quantity', 1))
+            unit = request.POST.get('unit', extracted.get('unit', 'piece'))
+            category = request.POST.get('category', extracted.get('category', 'other'))
+            expiration_date_str = request.POST.get('expiration_date', '')
+            
+            # Parse expiration date
+            expiration_date = None
+            if expiration_date_str:
+                try:
+                    expiration_date = datetime.strptime(expiration_date_str, '%Y-%m-%d').date()
+                except:
+                    expiration_date = extracted.get('expiration_date')
+            else:
+                expiration_date = extracted.get('expiration_date')
             
             # Create inventory item
-            item = InventoryItem.objects.create(
-                user=request.user,
-                item_name=request.POST.get('item_name', item_data['item_name']),
-                quantity=float(request.POST.get('quantity', item_data['quantity'])),
-                unit=request.POST.get('unit', item_data['unit']),
-                category=request.POST.get('category', item_data['category']),
-                purchase_date=timezone.now().date(),
-                expiration_date=request.POST.get('expiration_date') or item_data.get('expiration_date'),
-            )
-            item.update_status()
-            
-            # Associate upload
-            upload.associated_inventory = item
-            upload.save()
-            
-            return redirect('inventory:detail', pk=item.id)
+            try:
+                item = InventoryItem.objects.create(
+                    user=request.user,
+                    item_name=item_name,
+                    quantity=Decimal(str(quantity)),
+                    unit=unit,
+                    category=category,
+                    purchase_date=timezone.now().date(),
+                    expiration_date=expiration_date,
+                )
+                item.update_status()
+                
+                # Associate upload
+                upload.associated_inventory = item
+                upload.save()
+                
+                messages.success(request, 'Item added to inventory successfully!')
+                return redirect('inventory:detail', pk=item.id)
+            except Exception as e:
+                messages.error(request, f'Error creating inventory item: {str(e)}')
     
     context = {
         'upload': upload,
         'result': result,
         'extracted_data': result.get('extracted_data', {}),
+        'confidence': result.get('confidence', 0),
+        'is_partial': result.get('is_partial', False),
+        'missing_fields': result.get('missing_fields', []),
+        'has_google_vision': processor._has_google_vision_key(),
     }
     
     return render(request, 'ai_analytics/ocr_result.html', context)
@@ -329,3 +394,74 @@ def get_heatmap_data(request):
     trends = analyzer.analyze_weekly_trends()
     
     return JsonResponse(trends['heatmap_data'])
+
+
+@login_required
+def expiration_risks(request):
+    """
+    Display AI expiration risk predictions with prioritization.
+    """
+    predictor = ExpirationRiskPredictor(request.user)
+    
+    # Get predictions
+    days_ahead = int(request.GET.get('days', 7))
+    predictions = predictor.predict_expiration_risks(days_ahead=days_ahead)
+    
+    # Get alerts
+    alerts = predictor.get_high_risk_alerts(limit=20)
+    
+    # Get consumption priority list
+    priority_list = predictor.get_consumption_priority_list()
+    
+    # Get category risk summary
+    category_summary = predictor.get_category_risk_summary()
+    
+    # Save high-risk predictions to database
+    for pred in predictions:
+        if pred['priority'] in ['critical', 'high']:
+            WastePrediction.objects.update_or_create(
+                user=request.user,
+                inventory_item=pred['inventory_item'],
+                item_name=pred['item_name'],
+                predicted_waste_date=pred['expiration_date'],
+                defaults={
+                    'category': pred['category'],
+                    'predicted_waste_probability': Decimal(str(pred['risk_score'])),
+                    'reasoning': pred['reasoning']
+                }
+            )
+    
+    context = {
+        'predictions': predictions,
+        'alerts': alerts,
+        'priority_list': priority_list,
+        'category_summary': category_summary,
+        'days_ahead': days_ahead,
+        'current_season': predictor._get_current_season(),
+    }
+    
+    return render(request, 'ai_analytics/expiration_risks.html', context)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_expiration_alerts(request):
+    """
+    API endpoint for getting expiration alerts (for dashboard/widget).
+    """
+    predictor = ExpirationRiskPredictor(request.user)
+    alerts = predictor.get_high_risk_alerts(limit=5)
+    
+    alerts_data = [
+        {
+            'type': alert['type'],
+            'item_name': alert['item_name'],
+            'days_until_expiry': alert['days_until_expiry'],
+            'risk_score': float(alert['risk_score']),
+            'recommended_action': alert['recommended_action'],
+            'url': alert['url'],
+        }
+        for alert in alerts
+    ]
+    
+    return JsonResponse({'alerts': alerts_data})

@@ -3,6 +3,45 @@
 
 {% block title %}OCR Processing Result{% endblock %}
 
+{% block extra_css %}
+<style>
+    .confidence-high {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+    .confidence-medium {
+        background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+        color: #333;
+    }
+    .confidence-low {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+    }
+    .extracted-field {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+    .missing-field {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 8px;
+        border-left: 4px solid #ff6b6b;
+        background: #fff5f5;
+    }
+    .raw-text-container {
+        max-height: 200px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row mb-4">
@@ -10,80 +49,216 @@
             <h1 class="display-4 mb-3">
                 <i class="bi bi-camera"></i> OCR Processing Result
             </h1>
+            <p class="lead">Review and confirm the extracted information</p>
         </div>
     </div>
 
     {% if result.success %}
+    <!-- Confidence Score -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-12">
             <div class="card shadow border-0">
+                <div class="card-header {% if result.confidence >= 80 %}confidence-high{% elif result.confidence >= 50 %}confidence-medium{% else %}confidence-low{% endif %}">
+                    <h5 class="mb-0">
+                        <i class="bi bi-{% if result.confidence >= 80 %}check-circle{% elif result.confidence >= 50 %}exclamation-triangle{% else %}x-circle{% endif %}"></i>
+                        Extraction Confidence: {{ result.confidence }}%
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-2" style="height: 25px;">
+                        <div class="progress-bar {% if result.confidence >= 80 %}bg-success{% elif result.confidence >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                             style="width: {{ result.confidence }}%">
+                            {{ result.confidence }}%
+                        </div>
+                    </div>
+                    <p class="mb-0">
+                        <strong>Method:</strong> {{ result.method|title }}
+                        {% if result.is_partial %}
+                        <span class="badge bg-warning text-dark ms-2">Partial Extraction</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Extracted Information -->
+        <div class="col-md-6">
+            <div class="card shadow border-0 mb-3">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">Extracted Information</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Confidence:</strong> {{ result.confidence }}%</p>
-                    <p><strong>Method:</strong> {{ result.method|title }}</p>
-                    <hr>
-                    <h6>Extracted Data:</h6>
-                    <ul>
-                        {% if extracted_data.item_name %}
-                        <li><strong>Item Name:</strong> {{ extracted_data.item_name }}</li>
-                        {% endif %}
-                        {% if extracted_data.quantity %}
-                        <li><strong>Quantity:</strong> {{ extracted_data.quantity }} {{ extracted_data.unit|default:"" }}</li>
-                        {% endif %}
-                        {% if extracted_data.expiration_date %}
-                        <li><strong>Expiration Date:</strong> {{ extracted_data.expiration_date|date:"M d, Y" }}</li>
-                        {% endif %}
-                        {% if extracted_data.price %}
-                        <li><strong>Price:</strong> ${{ extracted_data.price }}</li>
-                        {% endif %}
-                        {% if extracted_data.category %}
-                        <li><strong>Category:</strong> {{ extracted_data.category|title }}</li>
-                        {% endif %}
-                    </ul>
+                    {% if extracted_data.item_name %}
+                    <div class="extracted-field">
+                        <strong><i class="bi bi-check-circle text-success"></i> Item Name:</strong>
+                        <p class="mb-0">{{ extracted_data.item_name }}</p>
+                    </div>
+                    {% else %}
+                    <div class="missing-field">
+                        <strong><i class="bi bi-x-circle text-danger"></i> Item Name:</strong>
+                        <p class="mb-0 text-muted">Not detected - Please enter manually</p>
+                    </div>
+                    {% endif %}
+
+                    {% if extracted_data.quantity %}
+                    <div class="extracted-field">
+                        <strong><i class="bi bi-check-circle text-success"></i> Quantity:</strong>
+                        <p class="mb-0">{{ extracted_data.quantity }} {{ extracted_data.unit|default:"units" }}</p>
+                    </div>
+                    {% else %}
+                    <div class="missing-field">
+                        <strong><i class="bi bi-x-circle text-danger"></i> Quantity:</strong>
+                        <p class="mb-0 text-muted">Not detected - Please enter manually</p>
+                    </div>
+                    {% endif %}
+
+                    {% if extracted_data.expiration_date %}
+                    <div class="extracted-field">
+                        <strong><i class="bi bi-check-circle text-success"></i> Expiration Date:</strong>
+                        <p class="mb-0">{{ extracted_data.expiration_date|date:"M d, Y" }}</p>
+                    </div>
+                    {% else %}
+                    <div class="missing-field">
+                        <strong><i class="bi bi-x-circle text-danger"></i> Expiration Date:</strong>
+                        <p class="mb-0 text-muted">Not detected - Optional field</p>
+                    </div>
+                    {% endif %}
+
+                    {% if extracted_data.category %}
+                    <div class="extracted-field">
+                        <strong><i class="bi bi-check-circle text-success"></i> Category:</strong>
+                        <p class="mb-0">{{ extracted_data.category|title }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if extracted_data.price %}
+                    <div class="extracted-field">
+                        <strong><i class="bi bi-currency-dollar"></i> Price:</strong>
+                        <p class="mb-0">${{ extracted_data.price }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if result.confidence >= 80 %}
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-lightbulb"></i> 
+                        <strong>High Confidence!</strong> You can automatically add this item to inventory.
+                        <br>
+                        <a href="?auto_add=true{% if has_google_vision %}&use_google=true{% endif %}" class="btn btn-success btn-sm mt-2">
+                            <i class="bi bi-magic"></i> Auto-Add to Inventory
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
+
+        <!-- Uploaded Image -->
         <div class="col-md-6">
-            <div class="card shadow border-0">
+            <div class="card shadow border-0 mb-3">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">Uploaded Image</h5>
                 </div>
                 <div class="card-body text-center">
                     {% if upload.image %}
-                    <img src="{{ upload.image.url }}" alt="Uploaded image" class="img-fluid" style="max-height: 300px;">
+                    <img src="{{ upload.image.url }}" alt="Uploaded image" class="img-fluid rounded shadow" style="max-height: 400px;">
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Form to confirm and edit extracted data -->
+    <!-- Raw Text (for debugging/review) -->
+    {% if result.raw_text %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-text"></i> Extracted Raw Text
+                        <button class="btn btn-sm btn-outline-light float-end" type="button" data-bs-toggle="collapse" data-bs-target="#rawText">
+                            Toggle
+                        </button>
+                    </h5>
+                </div>
+                <div class="collapse" id="rawText">
+                    <div class="card-body">
+                        <div class="raw-text-container">
+                            {{ result.raw_text|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Confirmation Form -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow-lg border-0">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Confirm and Add to Inventory</h5>
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil-square"></i> Review and Confirm
+                        {% if result.is_partial %}
+                        <span class="badge bg-warning text-dark ms-2">Partial Extraction - Please Review</span>
+                        {% endif %}
+                    </h5>
                 </div>
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="item_name" class="form-label">Item Name *</label>
-                                <input type="text" class="form-control" id="item_name" name="item_name" 
-                                       value="{{ extracted_data.item_name|default:'' }}" required>
+                                <label for="item_name" class="form-label">
+                                    Item Name *
+                                    {% if not extracted_data.item_name %}
+                                    <span class="badge bg-danger">Required</span>
+                                    {% endif %}
+                                </label>
+                                <input type="text" 
+                                       class="form-control {% if not extracted_data.item_name %}border-danger{% endif %}" 
+                                       id="item_name" 
+                                       name="item_name" 
+                                       value="{{ extracted_data.item_name|default:'' }}" 
+                                       required
+                                       placeholder="Enter item name">
+                                {% if not extracted_data.item_name %}
+                                <small class="text-danger">Item name was not detected. Please enter manually.</small>
+                                {% endif %}
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label for="quantity" class="form-label">Quantity *</label>
-                                <input type="number" class="form-control" id="quantity" name="quantity" 
-                                       value="{{ extracted_data.quantity|default:1 }}" step="0.01" min="0.01" required>
+                                <label for="quantity" class="form-label">
+                                    Quantity *
+                                    {% if not extracted_data.quantity %}
+                                    <span class="badge bg-danger">Required</span>
+                                    {% endif %}
+                                </label>
+                                <input type="number" 
+                                       class="form-control {% if not extracted_data.quantity %}border-danger{% endif %}" 
+                                       id="quantity" 
+                                       name="quantity" 
+                                       value="{{ extracted_data.quantity|default:1 }}" 
+                                       step="0.01" 
+                                       min="0.01" 
+                                       required
+                                       placeholder="1.0">
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label for="unit" class="form-label">Unit *</label>
-                                <select class="form-select" id="unit" name="unit" required>
-                                    <option value="{{ extracted_data.unit|default:'piece' }}" selected>{{ extracted_data.unit|default:'piece'|title }}</option>
+                                <label for="unit" class="form-label">
+                                    Unit *
+                                    {% if not extracted_data.unit %}
+                                    <span class="badge bg-danger">Required</span>
+                                    {% endif %}
+                                </label>
+                                <select class="form-select {% if not extracted_data.unit %}border-danger{% endif %}" 
+                                        id="unit" 
+                                        name="unit" 
+                                        required>
+                                    <option value="{{ extracted_data.unit|default:'piece' }}" selected>
+                                        {{ extracted_data.unit|default:'piece'|title }}
+                                    </option>
                                     <option value="kg">Kilogram (kg)</option>
                                     <option value="g">Gram (g)</option>
                                     <option value="lb">Pound (lb)</option>
@@ -99,7 +274,9 @@
                             <div class="col-md-6 mb-3">
                                 <label for="category" class="form-label">Category *</label>
                                 <select class="form-select" id="category" name="category" required>
-                                    <option value="{{ extracted_data.category|default:'other' }}" selected>{{ extracted_data.category|default:'other'|title }}</option>
+                                    <option value="{{ extracted_data.category|default:'other' }}" selected>
+                                        {{ extracted_data.category|default:'other'|title }}
+                                    </option>
                                     <option value="vegetable">Vegetable</option>
                                     <option value="fruit">Fruit</option>
                                     <option value="dairy">Dairy</option>
@@ -112,37 +289,88 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="expiration_date" class="form-label">Expiration Date</label>
-                                <input type="date" class="form-control" id="expiration_date" name="expiration_date" 
-                                       value="{% if extracted_data.expiration_date %}{{ extracted_data.expiration_date|date:'Y-m-d' }}{% endif %}">
+                                <input type="date" 
+                                       class="form-control" 
+                                       id="expiration_date" 
+                                       name="expiration_date" 
+                                       value="{% if extracted_data.expiration_date %}{{ extracted_data.expiration_date|date:'Y-m-d' }}{% endif %}"
+                                       placeholder="Optional">
+                                <small class="text-muted">Leave blank if not applicable</small>
                             </div>
                         </div>
+                        
+                        {% if result.is_partial %}
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle"></i> 
-                            Please review and correct the extracted information before adding to inventory.
+                            <strong>Partial Extraction Detected:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field in missing_fields %}
+                                <li>{{ field|title|replace:"_, " }} field is missing</li>
+                                {% endfor %}
+                            </ul>
+                            Please review and complete all required fields before adding to inventory.
                         </div>
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="bi bi-check-circle"></i> Add to Inventory
-                        </button>
-                        <a href="{% url 'uploads:list' %}" class="btn btn-secondary btn-lg">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </a>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            Please review the extracted information and make any necessary corrections before adding to inventory.
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Add to Inventory
+                            </button>
+                            <a href="{% url 'uploads:list' %}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            {% if has_google_vision and result.method != 'google_vision' %}
+                            <a href="?use_google=true" class="btn btn-info btn-lg">
+                                <i class="bi bi-arrow-clockwise"></i> Try Google Vision
+                            </a>
+                            {% endif %}
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
     {% else %}
-    <div class="alert alert-danger">
-        <h5><i class="bi bi-exclamation-triangle"></i> OCR Processing Failed</h5>
-        <p>{{ result.error }}</p>
-        {% if result.fallback %}
-        <p><strong>Fallback:</strong> {{ result.fallback }}</p>
-        {% endif %}
-    </div>
-    <div class="text-center">
-        <a href="{% url 'uploads:list' %}" class="btn btn-primary">Back to Uploads</a>
+    <!-- Error State -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger shadow-lg">
+                <h5><i class="bi bi-exclamation-triangle"></i> OCR Processing Failed</h5>
+                <p><strong>Error:</strong> {{ result.error }}</p>
+                {% if result.fallback %}
+                <p><strong>Fallback:</strong> {{ result.fallback }}</p>
+                {% endif %}
+                <hr>
+                <p>You can still add the item manually:</p>
+                <a href="{% url 'inventory:create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Item Manually
+                </a>
+                <a href="{% url 'uploads:list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Uploads
+                </a>
+            </div>
+        </div>
     </div>
     {% endif %}
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Highlight missing fields
+    const missingFields = [{% for field in missing_fields %}'{{ field }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+    missingFields.forEach(function(field) {
+        const input = document.getElementById(field);
+        if (input) {
+            input.classList.add('border-danger');
+        }
+    });
+});
+</script>
+{% endblock %}

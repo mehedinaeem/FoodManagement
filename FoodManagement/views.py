@@ -38,6 +38,11 @@ def dashboard_placeholder(request):
     analyzer = TrackingAnalyzer(user)
     recommended_resources = analyzer.get_recommendations(limit=3)
     
+    # Get expiration risk alerts
+    from ai_analytics.expiration_predictor import ExpirationRiskPredictor
+    expiration_predictor = ExpirationRiskPredictor(user)
+    expiration_alerts = expiration_predictor.get_high_risk_alerts(limit=5)
+    
     # Check if user has seen welcome message (using session)
     show_welcome = request.session.get('show_welcome', True)
     if show_welcome:
@@ -52,6 +57,7 @@ def dashboard_placeholder(request):
         'recent_logs': recent_logs,
         'recent_inventory': recent_inventory,
         'recommended_resources': recommended_resources,
+        'expiration_alerts': expiration_alerts,
         'show_welcome': show_welcome,
     }
     

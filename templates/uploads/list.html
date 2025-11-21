@@ -84,13 +84,20 @@
                 </p>
             </div>
             <div class="card-footer bg-transparent">
-                <div class="btn-group btn-group-sm w-100">
-                    <a href="{% url 'uploads:detail' upload.pk %}" class="btn btn-outline-primary">
-                        <i class="bi bi-eye"></i> View
-                    </a>
-                    <a href="{% url 'uploads:delete' upload.pk %}" class="btn btn-outline-danger">
-                        <i class="bi bi-trash"></i> Delete
-                    </a>
+                <div class="d-grid gap-2">
+                    <div class="btn-group btn-group-sm w-100">
+                        <a href="{% url 'uploads:detail' upload.pk %}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        {% if not upload.associated_inventory %}
+                        <a href="{% url 'ai_analytics:process_ocr' upload.pk %}" class="btn btn-outline-warning" title="Process with OCR">
+                            <i class="bi bi-camera"></i> OCR
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'uploads:delete' upload.pk %}" class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

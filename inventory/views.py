@@ -47,6 +47,11 @@ def inventory_list(request):
         expiration_date__lte=timezone.now().date() + timedelta(days=3)
     ).exclude(status='consumed')[:10]
     
+    # Get AI expiration risk predictions
+    from ai_analytics.expiration_predictor import ExpirationRiskPredictor
+    expiration_predictor = ExpirationRiskPredictor(request.user)
+    expiration_alerts = expiration_predictor.get_high_risk_alerts(limit=5)
+    
     context = {
         'items': items,
         'filter_form': filter_form,
@@ -56,6 +61,7 @@ def inventory_list(request):
         'expired_items': expired_items,
         'category_stats': category_stats,
         'expiring_items': expiring_items,
+        'expiration_alerts': expiration_alerts,
     }
     
     return render(request, 'inventory/list.html', context)

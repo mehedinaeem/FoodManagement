@@ -141,3 +141,40 @@ LOGOUT_REDIRECT_URL = 'accounts:login'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email Configuration
+# ============================================================================
+# Outlook/Office 365 SMTP Configuration - Real Email Sending
+# ============================================================================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Outlook SMTP Settings
+# Using smtp-mail.outlook.com for personal Outlook accounts (better compatibility)
+EMAIL_HOST = 'smtp-mail.outlook.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'outlook_A4E7CAB42C216044@outlook.com'  # Your Outlook email
+EMAIL_HOST_PASSWORD = 'Jkkniu1234'  # Your Outlook password
+DEFAULT_FROM_EMAIL = 'Food Management <outlook_A4E7CAB42C216044@outlook.com>'
+
+# ============================================================================
+# ✅ Outlook Configuration Complete
+# 
+# Your Outlook account is configured:
+# - Email: outlook_A4E7CAB42C216044@outlook.com
+# - SMTP Server: smtp-mail.outlook.com (for personal Outlook accounts)
+# - Port: 587 (TLS)
+# - Password: Configured
+#
+# Test email sending:
+#   python manage.py send_expiration_emails --dry-run
+#   python manage.py send_expiration_emails
+#
+# NOTE: Outlook uses your regular password (no App Password needed)
+# ============================================================================
+
+# For Development/Testing (Console Backend - emails print to terminal):
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Site URL for email links
+SITE_URL = 'http://localhost:8000'  # Change to your production domain

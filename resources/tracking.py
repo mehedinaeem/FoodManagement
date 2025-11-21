@@ -81,23 +81,46 @@ class TrackingAnalyzer:
             'top_inventory_categories': top_inventory_categories,
         }
     
-    def get_recommendations(self, limit=5):
+    def get_recommendations(self, limit=5, resource_category_filter=None, resource_type_filter=None):
         """
         Get resource recommendations based on user's consumption and inventory patterns.
-        Returns list of tuples: (resource, reason, explanation)
+        
+        Args:
+            limit: Maximum number of recommendations
+            resource_category_filter: Filter by specific resource category (e.g., 'storage_tips')
+            resource_type_filter: Filter by specific resource type (e.g., 'article')
+        
+        Returns list of tuples: (resource, reason, explanation, matched_items)
         """
         recommendations = []
         reasons = {}
+        matched_items = {}  # Track which items triggered each recommendation
         
-        # Analyze food log categories
+        # Analyze food log categories with item names
         log_categories = Counter(
             self.food_logs.values_list('category', flat=True)
         )
         
-        # Analyze inventory categories
+        # Get actual item names for each category from logs
+        log_items_by_category = {}
+        for log in self.food_logs:
+            cat = log.category
+            if cat not in log_items_by_category:
+                log_items_by_category[cat] = []
+            log_items_by_category[cat].append(log.item_name)
+        
+        # Analyze inventory categories with item names
         inventory_categories = Counter(
             self.inventory_items.values_list('category', flat=True)
         )
+        
+        # Get actual item names for each category from inventory
+        inventory_items_by_category = {}
+        for item in self.inventory_items:
+            cat = item.category
+            if cat not in inventory_items_by_category:
+                inventory_items_by_category[cat] = []
+            inventory_items_by_category[cat].append(item.item_name)
         
         # Combine categories (weighted: inventory items are more important)
         all_categories = log_categories.copy()
@@ -105,54 +128,121 @@ class TrackingAnalyzer:
             all_categories[category] = all_categories.get(category, 0) + (count * 2)
         
         # Get top categories
-        top_categories = [cat for cat, _ in all_categories.most_common(3)]
+        top_categories = [cat for cat, _ in all_categories.most_common(5)]
         
         # Find resources based on category mapping
         resource_categories_to_search = set()
         
         for food_category in top_categories:
             if food_category in self.CATEGORY_MAPPING:
-                resource_categories_to_search.update(
-                    self.CATEGORY_MAPPING[food_category]
-                )
-                # Store reason for recommendation
-                for res_cat in self.CATEGORY_MAPPING[food_category]:
+                mapped_resource_cats = self.CATEGORY_MAPPING[food_category]
+                
+                # If filtering by resource category, only include if it matches
+                if resource_category_filter:
+                    if resource_category_filter not in mapped_resource_cats:
+                        continue
+                    resource_categories_to_search.add(resource_category_filter)
+                else:
+                    resource_categories_to_search.update(mapped_resource_cats)
+                
+                # Store reason and matched items for recommendation
+                for res_cat in mapped_resource_cats:
+                    if resource_category_filter and res_cat != resource_category_filter:
+                        continue
+                        
                     if res_cat not in reasons:
                         reasons[res_cat] = []
-                    reasons[res_cat].append(
-                        f"Based on your {food_category} consumption/inventory"
-                    )
+                        matched_items[res_cat] = []
+                    
+                    # Build detailed reason with item names
+                    log_items = log_items_by_category.get(food_category, [])
+                    inv_items = inventory_items_by_category.get(food_category, [])
+                    
+                    item_list = []
+                    if log_items:
+                        unique_log_items = list(set(log_items))[:3]  # Limit to 3 items
+                        item_list.extend([f'"{item}"' for item in unique_log_items])
+                    if inv_items:
+                        unique_inv_items = list(set(inv_items))[:3]
+                        item_list.extend([f'"{item}"' for item in unique_inv_items])
+                    
+                    if item_list:
+                        items_str = ', '.join(item_list[:5])  # Show up to 5 items
+                        if len(item_list) > 5:
+                            items_str += f' and {len(item_list) - 5} more'
+                        reasons[res_cat].append(
+                            f"You have {food_category} items: {items_str}"
+                        )
+                        matched_items[res_cat].extend(item_list)
+                    else:
+                        reasons[res_cat].append(
+                            f"Based on your {food_category} consumption/inventory"
+                        )
         
         # Pattern-based recommendations
-        if self.inventory_items.filter(status='expiring_soon').exists():
-            resource_categories_to_search.update(
-                self.PATTERN_RECOMMENDATIONS['expiring_items']
-            )
-            for res_cat in self.PATTERN_RECOMMENDATIONS['expiring_items']:
+        expiring_items = self.inventory_items.filter(status='expiring_soon')
+        if expiring_items.exists():
+            expiring_names = [item.item_name for item in expiring_items[:3]]
+            expiring_cats = self.PATTERN_RECOMMENDATIONS['expiring_items']
+            
+            for res_cat in expiring_cats:
+                if resource_category_filter and res_cat != resource_category_filter:
+                    continue
+                    
+                resource_categories_to_search.add(res_cat)
                 if res_cat not in reasons:
                     reasons[res_cat] = []
-                reasons[res_cat].append("You have items expiring soon")
+                    matched_items[res_cat] = []
+                
+                items_str = ', '.join([f'"{name}"' for name in expiring_names])
+                if expiring_items.count() > 3:
+                    items_str += f' and {expiring_items.count() - 3} more'
+                reasons[res_cat].append(
+                    f"You have {expiring_items.count()} item(s) expiring soon: {items_str}"
+                )
+                matched_items[res_cat].extend([f'"{name}"' for name in expiring_names])
         
-        if self.inventory_items.filter(status='expired').exists():
-            resource_categories_to_search.add('waste_reduction')
-            if 'waste_reduction' not in reasons:
-                reasons['waste_reduction'] = []
-            reasons['waste_reduction'].append("You have expired items")
+        expired_items = self.inventory_items.filter(status='expired')
+        if expired_items.exists():
+            if not resource_category_filter or resource_category_filter == 'waste_reduction':
+                resource_categories_to_search.add('waste_reduction')
+                if 'waste_reduction' not in reasons:
+                    reasons['waste_reduction'] = []
+                    matched_items['waste_reduction'] = []
+                
+                expired_names = [item.item_name for item in expired_items[:3]]
+                items_str = ', '.join([f'"{name}"' for name in expired_names])
+                if expired_items.count() > 3:
+                    items_str += f' and {expired_items.count() - 3} more'
+                reasons['waste_reduction'].append(
+                    f"You have {expired_items.count()} expired item(s): {items_str}"
+                )
+                matched_items['waste_reduction'].extend([f'"{name}"' for name in expired_names])
         
         if self.food_logs.count() > 10 and len(all_categories) > 5:
-            resource_categories_to_search.update(
-                self.PATTERN_RECOMMENDATIONS['many_categories']
-            )
-            for res_cat in self.PATTERN_RECOMMENDATIONS['many_categories']:
+            many_cats = self.PATTERN_RECOMMENDATIONS['many_categories']
+            for res_cat in many_cats:
+                if resource_category_filter and res_cat != resource_category_filter:
+                    continue
+                    
+                resource_categories_to_search.add(res_cat)
                 if res_cat not in reasons:
                     reasons[res_cat] = []
-                reasons[res_cat].append("You track multiple food categories")
+                reasons[res_cat].append(
+                    f"You track {len(all_categories)} different food categories across {self.food_logs.count()} logs"
+                )
         
         # Get resources
         if resource_categories_to_search:
             resources = Resource.objects.filter(
                 category__in=resource_categories_to_search
-            ).distinct()
+            )
+            
+            # Filter by resource type if specified
+            if resource_type_filter:
+                resources = resources.filter(resource_type=resource_type_filter)
+            
+            resources = resources.distinct()
             
             # Prioritize featured resources
             featured = resources.filter(featured=True)
@@ -161,7 +251,11 @@ class TrackingAnalyzer:
             # Add featured first
             for resource in featured[:limit]:
                 category = resource.category
-                explanation = self._generate_explanation(category, reasons.get(category, []))
+                explanation = self._generate_explanation(
+                    category, 
+                    reasons.get(category, []),
+                    matched_items.get(category, [])
+                )
                 recommendations.append((resource, category, explanation))
             
             # Add non-featured if we need more
@@ -169,14 +263,27 @@ class TrackingAnalyzer:
             if remaining > 0:
                 for resource in non_featured[:remaining]:
                     category = resource.category
-                    explanation = self._generate_explanation(category, reasons.get(category, []))
+                    explanation = self._generate_explanation(
+                        category, 
+                        reasons.get(category, []),
+                        matched_items.get(category, [])
+                    )
                     recommendations.append((resource, category, explanation))
         
         # If no specific recommendations, suggest general ones
         if not recommendations:
+            general_categories = ['waste_reduction', 'storage_tips', 'meal_planning']
+            if resource_category_filter:
+                general_categories = [resource_category_filter]
+            
             general_resources = Resource.objects.filter(
-                category__in=['waste_reduction', 'storage_tips', 'meal_planning']
-            ).filter(featured=True)[:limit]
+                category__in=general_categories
+            )
+            
+            if resource_type_filter:
+                general_resources = general_resources.filter(resource_type=resource_type_filter)
+            
+            general_resources = general_resources.filter(featured=True)[:limit]
             
             for resource in general_resources:
                 explanation = "General recommendation for sustainable food practices"
@@ -184,9 +291,14 @@ class TrackingAnalyzer:
         
         return recommendations[:limit]
     
-    def _generate_explanation(self, resource_category, reasons):
+    def _generate_explanation(self, resource_category, reasons, matched_items=None):
         """
         Generate a human-readable explanation for why a resource is recommended.
+        
+        Args:
+            resource_category: The resource category
+            reasons: List of reason strings
+            matched_items: List of item names that triggered this recommendation
         """
         category_dict = dict(Resource.CATEGORY_CHOICES)
         category_display = category_dict.get(resource_category, resource_category.replace('_', ' ').title())
@@ -194,12 +306,19 @@ class TrackingAnalyzer:
         if not reasons:
             return f"Related to: {category_display}"
         
-        # Format reasons nicely
+        # Format reasons nicely with item details
         if len(reasons) == 1:
-            return f"Recommended because: {reasons[0]}"
+            explanation = f"Recommended because: {reasons[0]}"
         else:
             main_reason = reasons[0]
-            return f"Recommended because: {main_reason} (and {len(reasons)-1} other reason{'s' if len(reasons) > 2 else ''})"
+            explanation = f"Recommended because: {main_reason}"
+            if len(reasons) > 1:
+                explanation += f" (and {len(reasons)-1} other reason{'s' if len(reasons) > 2 else ''})"
+        
+        # Add category context
+        explanation += f" | Related to: {category_display}"
+        
+        return explanation
     
     def get_insights(self):
         """

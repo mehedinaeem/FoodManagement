@@ -65,6 +65,56 @@
     </div>
 </div>
 
+<!-- Expiration Risk Alerts -->
+{% if expiration_alerts %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-danger alert-dismissible fade show shadow-lg" role="alert">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 2rem;"></i>
+                <div class="flex-grow-1">
+                    <h4 class="alert-heading mb-1">High-Risk Expiration Alerts</h4>
+                    <p class="mb-0">You have {{ expiration_alerts|length }} item{{ expiration_alerts|length|pluralize }} at high risk of expiration</p>
+                </div>
+                <a href="{% url 'ai_analytics:expiration_risks' %}" class="btn btn-danger">
+                    <i class="bi bi-arrow-right"></i> View All Risks
+                </a>
+            </div>
+            <hr>
+            <div class="row">
+                {% for alert in expiration_alerts|slice:":3" %}
+                <div class="col-md-4 mb-2">
+                    <div class="card border-danger">
+                        <div class="card-body p-2">
+                            <strong>{{ alert.item_name }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                Expires: {{ alert.expiration_date|date:"M d, Y" }} 
+                                ({{ alert.days_until_expiry }} day{{ alert.days_until_expiry|pluralize }})
+                            </small>
+                            <br>
+                            <small><strong>Action:</strong> {{ alert.recommended_action|truncatewords:8 }}</small>
+                            <br>
+                            <a href="{{ alert.url }}" class="btn btn-sm btn-outline-danger mt-1">
+                                View Item
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if expiration_alerts|length > 3 %}
+            <div class="mt-2 text-center">
+                <a href="{% url 'ai_analytics:expiration_risks' %}" class="btn btn-sm btn-outline-danger">
+                    View All {{ expiration_alerts|length }} Alerts
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row mb-4">
     <div class="col-12">
         <h2 class="text-primary-custom mb-4">

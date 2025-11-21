@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load ai_filters %}
+
+{% block title %}AI Expiration Risk Prediction{% endblock %}
+
+{% block extra_css %}
+<style>
+    .risk-critical {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        border-left: 5px solid #dc3545;
+    }
+    .risk-high {
+        background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+        color: #333;
+        border-left: 5px solid #ffc107;
+    }
+    .risk-medium {
+        background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);
+        color: white;
+        border-left: 5px solid #17a2b8;
+    }
+    .risk-low {
+        background: linear-gradient(135deg, #c8d6e5 0%, #8395a7 100%);
+        color: #333;
+        border-left: 5px solid #6c757d;
+    }
+    .priority-badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+    .risk-gauge {
+        width: 100px;
+        height: 100px;
+        position: relative;
+        margin: 0 auto;
+    }
+    .alert-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .alert-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i> AI Expiration Risk Prediction
+            </h1>
+            <p class="lead">Smart predictions based on consumption patterns, category, and seasonality</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow border-0 text-center">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-2">{{ alerts|length }}</h3>
+                    <p class="text-muted mb-0">High-Risk Items</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 text-center">
+                <div class="card-body">
+                    <i class="bi bi-list-ol text-warning" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-2">{{ priority_list|length }}</h3>
+                    <p class="text-muted mb-0">Priority Items</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 text-center">
+                <div class="card-body">
+                    <i class="bi bi-calendar-event text-info" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-2">{{ current_season|title }}</h3>
+                    <p class="text-muted mb-0">Current Season</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow border-0 text-center">
+                <div class="card-body">
+                    <i class="bi bi-clock-history text-success" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-2">{{ days_ahead }} days</h3>
+                    <p class="text-muted mb-0">Look Ahead</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- High-Risk Alerts -->
+    {% if alerts %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bell-fill"></i> High-Risk Alerts - Immediate Action Required
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for alert in alerts %}
+                        <div class="col-md-6 mb-3">
+                            <div class="alert-card card border-0 shadow-sm h-100 {% if alert.type == 'critical' %}risk-critical{% else %}risk-high{% endif %}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-{% if alert.type == 'critical' %}exclamation-triangle-fill{% else %}exclamation-circle{% endif %}"></i>
+                                            {{ alert.item_name }}
+                                        </h6>
+                                        <span class="priority-badge bg-{% if alert.type == 'critical' %}dark{% else %}warning text-dark{% endif %}">
+                                            {{ alert.type|upper }}
+                                        </span>
+                                    </div>
+                                    <p class="mb-2">
+                                        <strong>Expires:</strong> {{ alert.expiration_date|date:"M d, Y" }}
+                                        <br>
+                                        <strong>Days Left:</strong> {{ alert.days_until_expiry }} day{{ alert.days_until_expiry|pluralize }}
+                                        <br>
+                                        <strong>Risk Score:</strong> {{ alert.risk_score|floatformat:1 }}%
+                                    </p>
+                                    <div class="progress mb-2" style="height: 20px;">
+                                        <div class="progress-bar {% if alert.type == 'critical' %}bg-danger{% else %}bg-warning{% endif %}" 
+                                             style="width: {{ alert.risk_score }}%">
+                                            {{ alert.risk_score|floatformat:0 }}%
+                                        </div>
+                                    </div>
+                                    <p class="mb-2"><strong>Action:</strong> {{ alert.recommended_action }}</p>
+                                    <a href="{{ alert.url }}" class="btn btn-sm btn-light">
+                                        <i class="bi bi-arrow-right"></i> View Item
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success shadow-lg">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle-fill me-3" style="font-size: 2rem;"></i>
+            <div>
+                <h5 class="mb-1">No High-Risk Items!</h5>
+                <p class="mb-0">All your items are at low risk of expiration. Great job managing your inventory!</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Consumption Priority List -->
+    {% if priority_list %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ol"></i> Consumption Priority List (FIFO + AI Ranking)
+                    </h5>
+                    <small>Items prioritized for consumption based on expiration risk and purchase date</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Priority</th>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Expires</th>
+                                    <th>Days Left</th>
+                                    <th>Risk Score</th>
+                                    <th>AI Ranking</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pred in priority_list %}
+                                <tr class="{% if pred.priority == 'critical' %}table-danger{% elif pred.priority == 'high' %}table-warning{% elif pred.priority == 'medium' %}table-info{% endif %}">
+                                    <td>
+                                        <span class="badge bg-{% if pred.priority == 'critical' %}danger{% elif pred.priority == 'high' %}warning{% elif pred.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                            #{{ forloop.counter }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ pred.item_name }}</strong></td>
+                                    <td><span class="badge bg-secondary">{{ pred.category|title }}</span></td>
+                                    <td>{{ pred.expiration_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if pred.days_until_expiry <= 0 %}
+                                        <span class="badge bg-danger">Expired</span>
+                                        {% else %}
+                                        {{ pred.days_until_expiry }} day{{ pred.days_until_expiry|pluralize }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 80px;">
+                                            <div class="progress-bar {% if pred.risk_score >= 80 %}bg-danger{% elif pred.risk_score >= 60 %}bg-warning{% elif pred.risk_score >= 40 %}bg-info{% else %}bg-success{% endif %}" 
+                                                 style="width: {{ pred.risk_score }}%">
+                                                {{ pred.risk_score|floatformat:0 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>{{ pred.ai_ranking_score|floatformat:1 }}</strong>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'inventory:detail' pred.inventory_item.id %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Category Risk Summary -->
+    {% if category_summary %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart"></i> Risk Summary by Category
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for category, data in category_summary.items %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ category|title }}</h6>
+                                    <p class="mb-1">
+                                        <strong>Total Items:</strong> {{ data.total_items }}
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>High-Risk Items:</strong> 
+                                        <span class="badge {% if data.high_risk_items > 0 %}bg-danger{% else %}bg-success{% endif %}">
+                                            {{ data.high_risk_items }}
+                                        </span>
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Avg Risk:</strong> {{ data.avg_risk|floatformat:1 }}%
+                                    </p>
+                                    <div class="progress mt-2" style="height: 10px;">
+                                        <div class="progress-bar {% if data.avg_risk >= 60 %}bg-danger{% elif data.avg_risk >= 40 %}bg-warning{% else %}bg-success{% endif %}" 
+                                             style="width: {{ data.avg_risk }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- All Predictions -->
+    {% if predictions %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check"></i> All Expiration Risk Predictions
+                    </h5>
+                    <small>Sorted by AI ranking score (highest risk first)</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for pred in predictions %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card alert-card border-0 shadow-sm h-100 risk-{{ pred.priority }}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">{{ pred.item_name }}</h6>
+                                            <span class="badge bg-secondary">{{ pred.category|title }}</span>
+                                        </div>
+                                        <span class="priority-badge bg-{% if pred.priority == 'critical' %}danger{% elif pred.priority == 'high' %}warning{% elif pred.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                            {{ pred.priority|upper }}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="row text-center mb-2">
+                                        <div class="col-4">
+                                            <small class="d-block">Expires</small>
+                                            <strong>{{ pred.expiration_date|date:"M d" }}</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="d-block">Days Left</small>
+                                            <strong>{{ pred.days_until_expiry }}</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="d-block">Risk</small>
+                                            <strong>{{ pred.risk_score|floatformat:0 }}%</strong>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="progress mb-2" style="height: 15px;">
+                                        <div class="progress-bar {% if pred.risk_score >= 80 %}bg-danger{% elif pred.risk_score >= 60 %}bg-warning{% elif pred.risk_score >= 40 %}bg-info{% else %}bg-success{% endif %}" 
+                                             style="width: {{ pred.risk_score }}%">
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="small mb-2"><strong>Reasoning:</strong> {{ pred.reasoning|truncatewords:15 }}</p>
+                                    <p class="small mb-2"><strong>Action:</strong> {{ pred.recommended_action }}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">AI Rank: {{ pred.ai_ranking_score|floatformat:1 }}</small>
+                                        <a href="{% url 'inventory:detail' pred.inventory_item.id %}" class="btn btn-sm btn-light">
+                                            View <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No items with expiration dates found in your inventory.
+    </div>
+    {% endif %}
+
+    <!-- Filter Options -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h6>Filter by Days Ahead</h6>
+                    <div class="btn-group" role="group">
+                        <a href="?days=3" class="btn btn-outline-primary {% if days_ahead == 3 %}active{% endif %}">3 Days</a>
+                        <a href="?days=7" class="btn btn-outline-primary {% if days_ahead == 7 %}active{% endif %}">7 Days</a>
+                        <a href="?days=14" class="btn btn-outline-primary {% if days_ahead == 14 %}active{% endif %}">14 Days</a>
+                        <a href="?days=30" class="btn btn-outline-primary {% if days_ahead == 30 %}active{% endif %}">30 Days</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
