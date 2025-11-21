@@ -163,6 +163,53 @@
     </div>
 </div>
 
+<!-- Recommended Resources -->
+{% if recommended_resources %}
+<div class="row mt-4 mb-4">
+    <div class="col-12">
+        <h3 class="text-primary-custom mb-3">
+            <i class="bi bi-lightbulb-fill"></i> Recommended Resources for You
+        </h3>
+        <p class="text-muted">Based on your consumption and inventory patterns</p>
+    </div>
+</div>
+<div class="row g-4 mb-4">
+    {% for resource, category, explanation in recommended_resources %}
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-start mb-2">
+                    <i class="bi {{ resource.get_type_icon }} text-primary me-2" style="font-size: 1.5rem;"></i>
+                    <div class="flex-grow-1">
+                        <h6 class="card-title mb-1">{{ resource.title }}</h6>
+                        <span class="badge" style="background: var(--gradient-secondary);">
+                            {{ resource.get_category_display }}
+                        </span>
+                    </div>
+                </div>
+                <p class="card-text small text-muted mb-2">{{ resource.description|truncatewords:15 }}</p>
+                <div class="alert alert-info small mb-0 py-2">
+                    <i class="bi bi-info-circle"></i> <small>{{ explanation }}</small>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'resources:detail' resource.pk %}" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-eye"></i> View Resource
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <a href="{% url 'resources:tracking' %}" class="btn btn-outline-primary">
+            <i class="bi bi-graph-up-arrow"></i> View All Recommendations & Tracking
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <!-- Recent Activity -->
 <div class="row mt-4">
     <div class="col-md-6">
