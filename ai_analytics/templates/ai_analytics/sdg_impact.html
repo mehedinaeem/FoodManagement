@@ -19,7 +19,24 @@
         <div class="col-md-12">
             <div class="card shadow-lg border-0">
                 <div class="card-body">
-                    <h3 class="mb-4">Current Week Score</h3>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">Current Week Score</h3>
+                        {% if current_score.improvement and current_score.improvement.overall_change %}
+                        <div>
+                            {% if current_score.improvement.overall_change > 0 %}
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-arrow-up"></i> +{{ current_score.improvement.overall_change|floatformat:1 }} points
+                            </span>
+                            {% elif current_score.improvement.overall_change < 0 %}
+                            <span class="badge bg-danger fs-6">
+                                <i class="bi bi-arrow-down"></i> {{ current_score.improvement.overall_change|floatformat:1 }} points
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary fs-6">No change</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
                     <div class="row text-center">
                         <div class="col-md-3">
                             <div class="p-4">
@@ -68,13 +85,31 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow border-0">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">AI Insights</h5>
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightbulb"></i> 
+                        {% if has_openai and use_ai %}AI-Powered Insights{% else %}Weekly Insights{% endif %}
+                    </h5>
+                    {% if has_openai %}
+                    <span class="badge bg-light text-dark">
+                        {% if use_ai %}AI Enabled{% else %}Rule-Based{% endif %}
+                    </span>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     {% for insight in current_score.insights %}
-                    <div class="alert alert-{% if insight.type == 'warning' %}warning{% elif insight.type == 'success' %}success{% else %}info{% endif %}">
-                        <strong>{{ insight.category|title }}:</strong> {{ insight.message }}
+                    <div class="alert alert-{% if insight.type == 'warning' %}warning{% elif insight.type == 'success' %}success{% else %}info{% endif %} d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ insight.category|title }}:</strong> {{ insight.message }}
+                            {% if insight.improvement_potential %}
+                            <br><small class="text-muted">Potential improvement: {{ insight.improvement_potential }}</small>
+                            {% endif %}
+                        </div>
+                        {% if insight.impact %}
+                        <span class="badge bg-{% if insight.impact == 'high' %}danger{% elif insight.impact == 'medium' %}warning{% else %}info{% endif %} ms-2">
+                            {{ insight.impact|title }} Impact
+                        </span>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -89,25 +124,64 @@
         <div class="col-12">
             <div class="card shadow border-0">
                 <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Actionable Steps to Improve</h5>
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check"></i> Actionable Steps to Improve Your Score
+                    </h5>
                 </div>
                 <div class="card-body">
                     {% for step in current_score.actionable_steps %}
-                    <div class="card mb-2 {% if step.priority == 'high' %}border-danger{% else %}border-warning{% endif %}">
+                    <div class="card mb-3 {% if step.priority == 'high' %}border-danger border-2{% else %}border-warning{% endif %} shadow-sm">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ step.action }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ step.category|title }} • Expected improvement: {{ step.expected_improvement }}</small>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-{% if step.priority == 'high' %}exclamation-triangle-fill text-danger{% else %}info-circle-fill text-warning{% endif %} me-2"></i>
+                                        <strong class="fs-5">{{ step.action }}</strong>
+                                    </div>
+                                    <div class="ms-4">
+                                        <span class="badge bg-{% if step.category == 'waste' %}success{% elif step.category == 'nutrition' %}info{% else %}warning{% endif %} me-2">
+                                            {{ step.category|title }}
+                                        </span>
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-graph-up-arrow"></i> +{{ step.expected_improvement }}
+                                        </span>
+                                        {% if step.boost_percentage %}
+                                        <span class="badge bg-success ms-2">
+                                            Boost: {{ step.boost_percentage }}
+                                        </span>
+                                        {% endif %}
+                                        {% if step.specific %}
+                                        <span class="badge bg-info ms-2">
+                                            <i class="bi bi-check-circle"></i> Specific to You
+                                        </span>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <span class="badge {% if step.priority == 'high' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                <span class="badge {% if step.priority == 'high' %}bg-danger{% else %}bg-warning text-dark{% endif %} ms-3">
                                     {{ step.priority|title }} Priority
                                 </span>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Weekly Progress Chart -->
+    {% if weekly_insights %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Weekly Progress (Last 4 Weeks)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="weeklyProgressChart" height="80"></canvas>
                 </div>
             </div>
         </div>
@@ -153,5 +227,92 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Chart.js for Weekly Progress -->
+{% if weekly_insights %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('weeklyProgressChart');
+    if (!ctx) return;
+    
+    const weeklyData = {{ weekly_insights_json|safe }};
+    
+    // Prepare data
+    const weeks = weeklyData.map(w => `Week ${w.week_number}`);
+    const overallScores = weeklyData.map(w => parseFloat(w.overall_score));
+    const wasteScores = weeklyData.map(w => parseFloat(w.waste_score));
+    const nutritionScores = weeklyData.map(w => parseFloat(w.nutrition_score));
+    const sustainabilityScores = weeklyData.map(w => parseFloat(w.sustainability_score));
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: weeks,
+            datasets: [
+                {
+                    label: 'Overall Score',
+                    data: overallScores,
+                    borderColor: 'rgb(13, 110, 253)',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                },
+                {
+                    label: 'Waste Reduction',
+                    data: wasteScores,
+                    borderColor: 'rgb(25, 135, 84)',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    tension: 0.4,
+                },
+                {
+                    label: 'Nutrition',
+                    data: nutritionScores,
+                    borderColor: 'rgb(13, 202, 240)',
+                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                    tension: 0.4,
+                },
+                {
+                    label: 'Sustainability',
+                    data: sustainabilityScores,
+                    borderColor: 'rgb(255, 193, 7)',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Score (0-100)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Week'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'SDG Impact Score Trends'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
 {% endblock %}
 

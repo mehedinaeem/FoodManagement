@@ -165,12 +165,16 @@ class InventoryItem(models.Model):
         return False
     
     def update_status(self):
-        """Update status based on expiration date."""
+        """Update status based on expiration date. Preserves 'consumed' status."""
+        # Don't change status if already marked as consumed
+        if self.status == 'consumed':
+            return
+        
         if self.is_expired():
             self.status = 'expired'
         elif self.is_expiring_soon():
             self.status = 'expiring_soon'
-        elif self.status != 'consumed':
+        else:
             self.status = 'fresh'
         self.save()
 

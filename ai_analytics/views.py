@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from decimal import Decimal
 import json
 
 from .ai_engine import AIConsumptionAnalyzer
@@ -241,25 +242,45 @@ def meal_optimizer(request):
 @login_required
 def sdg_impact(request):
     """
-    Display SDG Impact Score and insights.
+    Display SDG Impact Score with AI-powered insights and actionable steps.
     """
     scorer = SDGImpactScorer(request.user)
     
-    # Calculate current score
-    current_score = scorer.calculate_sdg_score()
+    # Check if AI should be used
+    use_ai = request.GET.get('use_ai', 'true') == 'true'
+    
+    # Calculate current score with AI insights
+    current_score = scorer.calculate_sdg_score(use_ai=use_ai)
+    
+    # Get weekly insights (last 4 weeks)
+    weekly_insights = scorer.get_weekly_insights(weeks=4)
     
     # Get historical scores
-    historical_scores = SDGImpactScore.objects.filter(
-        user=request.user
-    ).order_by('-week_start_date')[:12]  # Last 12 weeks
+    historical_scores = scorer.get_historical_scores(limit=12)
     
     # Save current score
     saved_score = scorer.save_weekly_score()
     
+    # Convert weekly_insights to JSON-serializable format
+    weekly_insights_json = []
+    for insight in weekly_insights:
+        weekly_insights_json.append({
+            'week_number': insight['week_number'],
+            'overall_score': float(insight['overall_score']),
+            'waste_score': float(insight['waste_score']),
+            'nutrition_score': float(insight['nutrition_score']),
+            'sustainability_score': float(insight['sustainability_score']),
+        })
+    
+    import json
     context = {
         'current_score': current_score,
         'saved_score': saved_score,
         'historical_scores': historical_scores,
+        'weekly_insights': weekly_insights,
+        'weekly_insights_json': json.dumps(weekly_insights_json),
+        'has_openai': scorer._has_openai_key(),
+        'use_ai': use_ai,
     }
     
     return render(request, 'ai_analytics/sdg_impact.html', context)

@@ -149,14 +149,50 @@ def inventory_detail(request, pk):
 @login_required
 def inventory_mark_consumed(request, pk):
     """
-    Mark an inventory item as consumed.
+    Mark an inventory item as consumed and create a food log entry.
+    This will update consumption patterns and scores.
     """
     item = get_object_or_404(InventoryItem, pk=pk, user=request.user)
     
     if request.method == 'POST':
+        # Mark item as consumed
         item.status = 'consumed'
         item.save()
-        messages.success(request, f'"{item.item_name}" marked as consumed!')
+        
+        # Create a FoodLog entry to track consumption
+        # This ensures the consumption is reflected in analytics and scores
+        from logs.models import FoodLog
+        from django.utils import timezone
+        
+        # Check if a log entry already exists for this item today
+        today = timezone.now().date()
+        existing_log = FoodLog.objects.filter(
+            user=request.user,
+            item_name=item.item_name,
+            category=item.category,
+            date_consumed=today
+        ).first()
+        
+        if existing_log:
+            # Update existing log with the consumed quantity
+            existing_log.quantity += item.quantity
+            existing_log.save()
+        else:
+            # Create new log entry
+            FoodLog.objects.create(
+                user=request.user,
+                item_name=item.item_name,
+                quantity=item.quantity,
+                unit=item.unit,
+                category=item.category,
+                date_consumed=today,
+                notes=f'Marked as consumed from inventory (ID: {item.id})'
+            )
+        
+        messages.success(
+            request, 
+            f'"{item.item_name}" marked as consumed! Consumption logged and scores will be updated.'
+        )
         return redirect('inventory:list')
     
     return render(request, 'inventory/mark_consumed.html', {'item': item})
