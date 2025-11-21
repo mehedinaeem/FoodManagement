@@ -4,6 +4,83 @@ from django.core.validators import MinValueValidator
 from django.utils import timezone
 
 
+class FoodItem(models.Model):
+    """
+    Reference database of common food items with their properties.
+    This is a seeded database, not user-specific inventory.
+    """
+    CATEGORY_CHOICES = [
+        ('vegetable', 'Vegetable'),
+        ('fruit', 'Fruit'),
+        ('dairy', 'Dairy'),
+        ('meat', 'Meat'),
+        ('grain', 'Grain'),
+        ('beverage', 'Beverage'),
+        ('snack', 'Snack'),
+        ('frozen', 'Frozen'),
+        ('canned', 'Canned'),
+        ('spice', 'Spice'),
+        ('other', 'Other'),
+    ]
+    
+    UNIT_CHOICES = [
+        ('kg', 'Kilogram (kg)'),
+        ('g', 'Gram (g)'),
+        ('lb', 'Pound (lb)'),
+        ('oz', 'Ounce (oz)'),
+        ('l', 'Liter (l)'),
+        ('ml', 'Milliliter (ml)'),
+        ('cup', 'Cup'),
+        ('piece', 'Piece'),
+        ('pack', 'Pack'),
+        ('bunch', 'Bunch'),
+    ]
+    
+    name = models.CharField(max_length=255, unique=True, help_text="Name of the food item")
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, help_text="Food category")
+    typical_expiration_days = models.PositiveIntegerField(
+        help_text="Typical expiration period in days",
+        null=True,
+        blank=True
+    )
+    sample_cost_per_unit = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        help_text="Sample cost per unit (for reference)",
+        null=True,
+        blank=True
+    )
+    unit = models.CharField(max_length=20, choices=UNIT_CHOICES, default='piece', help_text="Unit of measurement")
+    description = models.TextField(blank=True, null=True, help_text="Description of the food item")
+    storage_tips = models.TextField(blank=True, null=True, help_text="Tips for storing this item")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Food Item"
+        verbose_name_plural = "Food Items"
+        ordering = ['category', 'name']
+        indexes = [
+            models.Index(fields=['category']),
+            models.Index(fields=['name']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} ({self.get_category_display()})"
+    
+    def get_expiration_info(self):
+        """Get human-readable expiration information."""
+        if self.typical_expiration_days:
+            if self.typical_expiration_days < 7:
+                return f"{self.typical_expiration_days} days (Short-term)"
+            elif self.typical_expiration_days < 30:
+                return f"{self.typical_expiration_days} days (~{self.typical_expiration_days // 7} weeks)"
+            else:
+                return f"{self.typical_expiration_days} days (~{self.typical_expiration_days // 30} months)"
+        return "Not specified"
+
+
 class InventoryItem(models.Model):
     """
     Model for managing user's food inventory.

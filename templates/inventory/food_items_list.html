@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Food Items Database - Food Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary-custom mb-0">
+                    <i class="bi bi-database"></i> Food Items Database
+                </h2>
+                <p class="text-muted mb-0">Reference database of common household foods with expiration and cost information</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Card -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ total_items }}</h3>
+            <p class="text-muted mb-0">Total Food Items</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-secondary);">
+                <i class="bi bi-tags"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--secondary-color);">{{ category_stats|length }}</h3>
+            <p class="text-muted mb-0">Categories</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-success);">
+                <i class="bi bi-info-circle"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">Reference</h3>
+            <p class="text-muted mb-0">Database</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">
+            <i class="bi bi-funnel"></i> Filters
+        </h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                {{ filter_form.category.label_tag }}
+                {{ filter_form.category }}
+            </div>
+            <div class="col-md-6">
+                {{ filter_form.search.label_tag }}
+                {{ filter_form.search }}
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Food Items List -->
+{% if food_items %}
+<div class="row g-4">
+    {% for item in food_items %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">{{ item.name }}</h5>
+                    <span class="badge" style="background: var(--gradient-secondary);">
+                        {{ item.get_category_display }}
+                    </span>
+                </div>
+                
+                {% if item.description %}
+                <p class="card-text text-muted small">{{ item.description|truncatewords:15 }}</p>
+                {% endif %}
+                
+                <div class="mb-3">
+                    {% if item.typical_expiration_days %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-calendar-check text-primary me-2"></i>
+                        <span class="small">
+                            <strong>Expiration:</strong> {{ item.get_expiration_info }}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if item.sample_cost_per_unit %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-currency-dollar text-success me-2"></i>
+                        <span class="small">
+                            <strong>Cost:</strong> ${{ item.sample_cost_per_unit }} / {{ item.unit }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if item.storage_tips %}
+                <div class="alert alert-info small mb-0">
+                    <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> {{ item.storage_tips|truncatewords:10 }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'inventory:food_item_detail' item.pk %}" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-eye"></i> View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-search" style="font-size: 4rem; color: #ccc;"></i>
+        <p class="text-muted mt-3">No food items found matching your criteria.</p>
+        <a href="{% url 'inventory:food_items_list' %}" class="btn btn-primary mt-2">
+            <i class="bi bi-arrow-left"></i> View All Items
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Category Breakdown -->
+{% if category_stats %}
+<div class="card mt-4">
+    <div class="card-header text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-pie-chart"></i> Items by Category
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for stat in category_stats %}
+            <div class="col-md-3 col-sm-6">
+                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                    <span class="badge" style="background: var(--gradient-secondary);">
+                        {{ stat.category|title }}
+                    </span>
+                    <strong>{{ stat.count }}</strong>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

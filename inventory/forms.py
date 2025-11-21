@@ -1,5 +1,5 @@
 from django import forms
-from .models import InventoryItem
+from .models import InventoryItem, FoodItem
 
 
 class InventoryItemForm(forms.ModelForm):
@@ -79,3 +79,24 @@ class InventoryFilterForm(forms.Form):
         })
     )
 
+
+class FoodItemFilterForm(forms.Form):
+    """
+    Form for filtering food items (reference database).
+    """
+    category = forms.ChoiceField(
+        choices=[('', 'All Categories')] + FoodItem.CATEGORY_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'onchange': 'this.form.submit()'
+        })
+    )
+    
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Search food items...'
+        })
+    )

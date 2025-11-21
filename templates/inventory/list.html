@@ -9,9 +9,14 @@
             <h2 class="text-primary-custom mb-0">
                 <i class="bi bi-box-seam"></i> Food Inventory
             </h2>
-            <a href="{% url 'inventory:create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-circle-fill"></i> Add Item
-            </a>
+            <div class="btn-group">
+                <a href="{% url 'inventory:food_items_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-database"></i> Browse Food Database
+                </a>
+                <a href="{% url 'inventory:create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle-fill"></i> Add Item
+                </a>
+            </div>
         </div>
     </div>
 </div>

@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import InventoryItem
-from .forms import InventoryItemForm, InventoryFilterForm
+from .models import InventoryItem, FoodItem
+from .forms import InventoryItemForm, InventoryFilterForm, FoodItemFilterForm
 
 
 @login_required
@@ -154,3 +154,72 @@ def inventory_mark_consumed(request, pk):
         return redirect('inventory:list')
     
     return render(request, 'inventory/mark_consumed.html', {'item': item})
+
+
+# Food Items Reference Database Views
+@login_required
+def food_items_list(request):
+    """
+    Display list of food items from the reference database.
+    """
+    food_items = FoodItem.objects.all()
+    filter_form = FoodItemFilterForm(request.GET)
+    
+    # Apply filters
+    if filter_form.is_valid():
+        category = filter_form.cleaned_data.get('category')
+        search = filter_form.cleaned_data.get('search')
+        
+        if category:
+            food_items = food_items.filter(category=category)
+        if search:
+            food_items = food_items.filter(
+                Q(name__icontains=search) |
+                Q(description__icontains=search)
+            )
+    
+    # Statistics
+    total_items = food_items.count()
+    
+    # Category breakdown
+    category_stats = food_items.values('category').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    # Group by category for better display
+    items_by_category = {}
+    for item in food_items:
+        category_name = item.get_category_display()
+        if category_name not in items_by_category:
+            items_by_category[category_name] = []
+        items_by_category[category_name].append(item)
+    
+    context = {
+        'food_items': food_items,
+        'filter_form': filter_form,
+        'total_items': total_items,
+        'category_stats': category_stats,
+        'items_by_category': items_by_category,
+    }
+    
+    return render(request, 'inventory/food_items_list.html', context)
+
+
+@login_required
+def food_item_detail(request, pk):
+    """
+    View details of a food item from the reference database.
+    """
+    food_item = get_object_or_404(FoodItem, pk=pk)
+    
+    # Get similar items in the same category
+    similar_items = FoodItem.objects.filter(
+        category=food_item.category
+    ).exclude(pk=food_item.pk)[:5]
+    
+    context = {
+        'food_item': food_item,
+        'similar_items': similar_items,
+    }
+    
+    return render(request, 'inventory/food_item_detail.html', context)

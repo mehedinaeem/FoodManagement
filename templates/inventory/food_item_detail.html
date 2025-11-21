@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ food_item.name }} - Food Items Database{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="{% url 'inventory:food_items_list' %}" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Back to Food Items
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> {{ food_item.name }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="text-primary-custom">Basic Information</h5>
+                        <p class="mb-2">
+                            <strong>Category:</strong> 
+                            <span class="badge" style="background: var(--gradient-secondary);">
+                                {{ food_item.get_category_display }}
+                            </span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Unit:</strong> {{ food_item.unit }}
+                        </p>
+                        {% if food_item.typical_expiration_days %}
+                        <p class="mb-2">
+                            <strong>Typical Expiration:</strong> 
+                            <span class="text-primary-custom">{{ food_item.get_expiration_info }}</span>
+                        </p>
+                        {% endif %}
+                        {% if food_item.sample_cost_per_unit %}
+                        <p class="mb-2">
+                            <strong>Sample Cost:</strong> 
+                            <span class="text-success fw-bold">${{ food_item.sample_cost_per_unit }} / {{ food_item.unit }}</span>
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-primary-custom">Storage Information</h5>
+                        {% if food_item.storage_tips %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-lightbulb-fill"></i> <strong>Storage Tips:</strong>
+                            <p class="mb-0 mt-2">{{ food_item.storage_tips }}</p>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No storage tips available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if food_item.description %}
+                <div class="mb-4">
+                    <h5 class="text-primary-custom">Description</h5>
+                    <p class="bg-light p-3 rounded">{{ food_item.description }}</p>
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'inventory:create' %}?item_name={{ food_item.name|urlencode }}&category={{ food_item.category }}&unit={{ food_item.unit }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add to My Inventory
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'inventory:food_items_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header text-white" style="background: var(--gradient-secondary);">
+                <h5 class="mb-0">
+                    <i class="bi bi-grid"></i> Similar Items
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if similar_items %}
+                    <div class="list-group list-group-flush">
+                        {% for item in similar_items %}
+                        <a href="{% url 'inventory:food_item_detail' item.pk %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>{{ item.name }}</strong>
+                                <span class="badge" style="background: var(--gradient-secondary);">
+                                    {{ item.get_category_display }}
+                                </span>
+                            </div>
+                            {% if item.typical_expiration_days %}
+                            <small class="text-muted">{{ item.get_expiration_info }}</small>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">No similar items found.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body text-center">
+                <h6 class="text-primary-custom">Quick Stats</h6>
+                <div class="row g-2 mt-3">
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <strong class="text-primary-custom">
+                                {% if food_item.typical_expiration_days %}
+                                    {{ food_item.typical_expiration_days }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </strong>
+                            <br><small class="text-muted">Days</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 bg-light rounded">
+                            <strong class="text-success">
+                                {% if food_item.sample_cost_per_unit %}
+                                    ${{ food_item.sample_cost_per_unit }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </strong>
+                            <br><small class="text-muted">Cost</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
