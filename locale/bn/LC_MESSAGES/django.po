@@ -1,0 +1,500 @@
+# Bengali (Bangla) translations for Food Management
+# Copyright (C) 2024 Food Management
+# This file is distributed under the same license as the Food Management project.
+msgid ""
+msgstr ""
+"Project-Id-Version: Food Management 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-11-21 12:00+0000\n"
+"PO-Revision-Date: 2024-11-21 12:00+0000\n"
+"Language-Team: Bengali\n"
+"Language: bn\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Navigation
+msgid "Food Management"
+msgstr "খাদ্য ব্যবস্থাপনা"
+
+msgid "Login"
+msgstr "লগইন"
+
+msgid "Register"
+msgstr "নিবন্ধন"
+
+msgid "Dashboard"
+msgstr "ড্যাশবোর্ড"
+
+msgid "Logs"
+msgstr "লগ"
+
+msgid "Inventory"
+msgstr "ইনভেন্টরি"
+
+msgid "Food Database"
+msgstr "খাদ্য ডাটাবেস"
+
+msgid "Resources"
+msgstr "সম্পদ"
+
+msgid "Uploads"
+msgstr "আপলোড"
+
+msgid "AI Analytics"
+msgstr "এআই বিশ্লেষণ"
+
+msgid "Expiration Risks"
+msgstr "মেয়াদ শেষ হওয়ার ঝুঁকি"
+
+msgid "Profile"
+msgstr "প্রোফাইল"
+
+msgid "Logout"
+msgstr "লগআউট"
+
+# Common Actions
+msgid "View All"
+msgstr "সব দেখুন"
+
+msgid "View Fresh"
+msgstr "তাজা দেখুন"
+
+msgid "Check Now"
+msgstr "এখনই পরীক্ষা করুন"
+
+msgid "All Good!"
+msgstr "সব ঠিক আছে!"
+
+msgid "View Item"
+msgstr "আইটেম দেখুন"
+
+msgid "View All Risks"
+msgstr "সব ঝুঁকি দেখুন"
+
+msgid "Create"
+msgstr "তৈরি করুন"
+
+msgid "Edit"
+msgstr "সম্পাদনা করুন"
+
+msgid "Delete"
+msgstr "মুছুন"
+
+msgid "Save"
+msgstr "সংরক্ষণ করুন"
+
+msgid "Cancel"
+msgstr "বাতিল করুন"
+
+msgid "Submit"
+msgstr "জমা দিন"
+
+msgid "Back"
+msgstr "পিছনে"
+
+msgid "Next"
+msgstr "পরবর্তী"
+
+msgid "Previous"
+msgstr "পূর্ববর্তী"
+
+# Dashboard
+msgid "Welcome back, %(name)s!"
+msgstr "আবার স্বাগতম, %(name)s!"
+
+msgid "You're all set to start managing your food inventory and tracking consumption."
+msgstr "আপনি আপনার খাদ্য ইনভেন্টরি পরিচালনা এবং খরচ ট্র্যাকিং শুরু করার জন্য প্রস্তুত।"
+
+msgid "Food Logs"
+msgstr "খাদ্য লগ"
+
+msgid "Inventory Items"
+msgstr "ইনভেন্টরি আইটেম"
+
+msgid "Fresh Items"
+msgstr "তাজা আইটেম"
+
+msgid "Expiring Soon"
+msgstr "শীঘ্রই মেয়াদ শেষ"
+
+msgid "High-Risk Expiration Alerts"
+msgstr "উচ্চ ঝুঁকির মেয়াদ শেষ হওয়ার সতর্কতা"
+
+msgid "You have %(count)s item at high risk of expiration"
+msgid_plural "You have %(count)s items at high risk of expiration"
+msgstr[0] "আপনার %(count)sটি আইটেম মেয়াদ শেষ হওয়ার উচ্চ ঝুঁকিতে রয়েছে"
+msgstr[1] "আপনার %(count)sটি আইটেম মেয়াদ শেষ হওয়ার উচ্চ ঝুঁকিতে রয়েছে"
+
+msgid "Expires"
+msgstr "মেয়াদ শেষ"
+
+msgid "day"
+msgid_plural "days"
+msgstr[0] "দিন"
+msgstr[1] "দিন"
+
+msgid "Action"
+msgstr "কর্ম"
+
+msgid "Recent Food Logs"
+msgstr "সাম্প্রতিক খাদ্য লগ"
+
+msgid "Recent Inventory"
+msgstr "সাম্প্রতিক ইনভেন্টরি"
+
+msgid "No logs yet"
+msgstr "এখনও কোনো লগ নেই"
+
+msgid "No inventory items yet"
+msgstr "এখনও কোনো ইনভেন্টরি আইটেম নেই"
+
+msgid "Recommended Resources"
+msgstr "প্রস্তাবিত সম্পদ"
+
+msgid "Items Expiring Soon"
+msgstr "শীঘ্রই মেয়াদ শেষ হওয়ার আইটেম"
+
+msgid "No items expiring soon"
+msgstr "শীঘ্রই মেয়াদ শেষ হওয়ার কোনো আইটেম নেই"
+
+# Authentication
+msgid "Welcome Back!"
+msgstr "আবার স্বাগতম!"
+
+msgid "Sign in to manage your food inventory"
+msgstr "আপনার খাদ্য ইনভেন্টরি পরিচালনা করতে সাইন ইন করুন"
+
+msgid "Username or Email"
+msgstr "ব্যবহারকারীর নাম বা ইমেইল"
+
+msgid "Password"
+msgstr "পাসওয়ার্ড"
+
+msgid "Don't have an account?"
+msgstr "একটি অ্যাকাউন্ট নেই?"
+
+msgid "Register here"
+msgstr "এখানে নিবন্ধন করুন"
+
+msgid "Create Your Account"
+msgstr "আপনার অ্যাকাউন্ট তৈরি করুন"
+
+msgid "Join us in reducing food waste and promoting sustainable consumption"
+msgstr "খাদ্য অপচয় কমানো এবং টেকসই খরচ প্রচারে আমাদের সাথে যোগ দিন"
+
+msgid "Username"
+msgstr "ব্যবহারকারীর নাম"
+
+msgid "Email"
+msgstr "ইমেইল"
+
+msgid "First Name"
+msgstr "নামের প্রথম অংশ"
+
+msgid "Last Name"
+msgstr "নামের শেষ অংশ"
+
+msgid "Full Name"
+msgstr "পূর্ণ নাম"
+
+msgid "Your complete name"
+msgstr "আপনার সম্পূর্ণ নাম"
+
+msgid "Household Size"
+msgstr "পরিবারের আকার"
+
+msgid "Number of people in your household"
+msgstr "আপনার পরিবারে লোকের সংখ্যা"
+
+msgid "Dietary Preferences"
+msgstr "খাদ্যতালিকাগত পছন্দ"
+
+msgid "Budget Range"
+msgstr "বাজেট পরিসীমা"
+
+msgid "Location"
+msgstr "অবস্থান"
+
+msgid "Optional - for future local features"
+msgstr "ঐচ্ছিক - ভবিষ্যতের স্থানীয় বৈশিষ্ট্যের জন্য"
+
+msgid "Confirm Password"
+msgstr "পাসওয়ার্ড নিশ্চিত করুন"
+
+msgid "Already have an account?"
+msgstr "ইতিমধ্যে একটি অ্যাকাউন্ট আছে?"
+
+msgid "Login here"
+msgstr "এখানে লগইন করুন"
+
+# Forms and Fields
+msgid "Item Name"
+msgstr "আইটেমের নাম"
+
+msgid "Quantity"
+msgstr "পরিমাণ"
+
+msgid "Unit"
+msgstr "একক"
+
+msgid "Category"
+msgstr "বিভাগ"
+
+msgid "Date"
+msgstr "তারিখ"
+
+msgid "Notes"
+msgstr "নোট"
+
+msgid "Purchase Date"
+msgstr "ক্রয়ের তারিখ"
+
+msgid "Expiration Date"
+msgstr "মেয়াদ শেষ হওয়ার তারিখ"
+
+msgid "Status"
+msgstr "অবস্থা"
+
+msgid "Search"
+msgstr "অনুসন্ধান"
+
+msgid "Filter"
+msgstr "ফিল্টার"
+
+msgid "Clear"
+msgstr "পরিষ্কার করুন"
+
+# Inventory
+msgid "Add Inventory Item"
+msgstr "ইনভেন্টরি আইটেম যোগ করুন"
+
+msgid "Edit Inventory Item"
+msgstr "ইনভেন্টরি আইটেম সম্পাদনা করুন"
+
+msgid "Inventory Details"
+msgstr "ইনভেন্টরি বিবরণ"
+
+msgid "Mark as Consumed"
+msgstr "খাওয়া হয়েছে হিসাবে চিহ্নিত করুন"
+
+msgid "Are you sure you want to mark this item as consumed?"
+msgstr "আপনি কি নিশ্চিত যে আপনি এই আইটেমটিকে খাওয়া হয়েছে হিসাবে চিহ্নিত করতে চান?"
+
+msgid "Yes, Mark as Consumed"
+msgstr "হ্যাঁ, খাওয়া হয়েছে হিসাবে চিহ্নিত করুন"
+
+msgid "Food Items Database"
+msgstr "খাদ্য আইটেম ডাটাবেস"
+
+msgid "Browse Food Items"
+msgstr "খাদ্য আইটেম ব্রাউজ করুন"
+
+# Logs
+msgid "Food Logs"
+msgstr "খাদ্য লগ"
+
+msgid "Add Food Log"
+msgstr "খাদ্য লগ যোগ করুন"
+
+msgid "Edit Food Log"
+msgstr "খাদ্য লগ সম্পাদনা করুন"
+
+msgid "Log Details"
+msgstr "লগ বিবরণ"
+
+msgid "Date Consumed"
+msgstr "খাওয়ার তারিখ"
+
+msgid "Consumption History"
+msgstr "খরচের ইতিহাস"
+
+# Resources
+msgid "Sustainable Resources"
+msgstr "টেকসই সম্পদ"
+
+msgid "Resource Details"
+msgstr "সম্পদ বিবরণ"
+
+msgid "Tracking & Recommendations"
+msgstr "ট্র্যাকিং এবং সুপারিশ"
+
+# Uploads
+msgid "Image Uploads"
+msgstr "ছবি আপলোড"
+
+msgid "Upload Image"
+msgstr "ছবি আপলোড করুন"
+
+msgid "Upload Details"
+msgstr "আপলোড বিবরণ"
+
+msgid "Associate with Inventory or Log"
+msgstr "ইনভেন্টরি বা লগের সাথে যুক্ত করুন"
+
+# AI Analytics
+msgid "AI Analytics Dashboard"
+msgstr "এআই বিশ্লেষণ ড্যাশবোর্ড"
+
+msgid "Consumption Patterns"
+msgstr "খরচের ধরণ"
+
+msgid "Meal Optimizer"
+msgstr "খাবার অপ্টিমাইজার"
+
+msgid "Waste Analysis"
+msgstr "অপচয় বিশ্লেষণ"
+
+msgid "SDG Impact Score"
+msgstr "এসডিজি প্রভাব স্কোর"
+
+msgid "NourishBot Chat"
+msgstr "নুরিশবট চ্যাট"
+
+msgid "OCR Processing"
+msgstr "ওসিআর প্রক্রিয়াকরণ"
+
+# Footer
+msgid "Supporting SDG 2: Zero Hunger & SDG 12: Responsible Consumption"
+msgstr "এসডিজি ২: শূন্য ক্ষুধা এবং এসডিজি ১২: দায়িত্বশীল ব্যবহার সমর্থন করছে"
+
+# Messages
+msgid "Success"
+msgstr "সফল"
+
+msgid "Error"
+msgstr "ত্রুটি"
+
+msgid "Warning"
+msgstr "সতর্কতা"
+
+msgid "Info"
+msgstr "তথ্য"
+
+# Time/Date related
+msgid "Today"
+msgstr "আজ"
+
+msgid "Yesterday"
+msgstr "গতকাল"
+
+msgid "This Week"
+msgstr "এই সপ্তাহ"
+
+msgid "This Month"
+msgstr "এই মাস"
+
+msgid "Last Month"
+msgstr "গত মাস"
+
+msgid "All Time"
+msgstr "সব সময়"
+
+# Status values
+msgid "Fresh"
+msgstr "তাজা"
+
+msgid "Expiring Soon"
+msgstr "শীঘ্রই মেয়াদ শেষ"
+
+msgid "Expired"
+msgstr "মেয়াদ শেষ"
+
+msgid "Consumed"
+msgstr "খাওয়া হয়েছে"
+
+# Categories
+msgid "Vegetable"
+msgstr "শাকসবজি"
+
+msgid "Fruit"
+msgstr "ফল"
+
+msgid "Dairy"
+msgstr "দুগ্ধজাত"
+
+msgid "Meat"
+msgstr "মাংস"
+
+msgid "Grain"
+msgstr "শস্য"
+
+msgid "Beverage"
+msgstr "পানীয়"
+
+msgid "Snack"
+msgstr "নাস্তা"
+
+msgid "Frozen"
+msgstr "হিমায়িত"
+
+msgid "Canned"
+msgstr "ক্যানড"
+
+msgid "Other"
+msgstr "অন্যান্য"
+
+# Common phrases
+msgid "No data available"
+msgstr "কোনো ডেটা উপলব্ধ নেই"
+
+msgid "Loading..."
+msgstr "লোড হচ্ছে..."
+
+msgid "Please wait"
+msgstr "অনুগ্রহ করে অপেক্ষা করুন"
+
+msgid "Are you sure?"
+msgstr "আপনি কি নিশ্চিত?"
+
+msgid "This action cannot be undone"
+msgstr "এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না"
+
+msgid "Yes, Delete"
+msgstr "হ্যাঁ, মুছুন"
+
+msgid "No, Cancel"
+msgstr "না, বাতিল করুন"
+
+# Landing Page
+msgid "Reduce Waste, Save Money"
+msgstr "অপচয় কমান, টাকা বাঁচাও"
+
+msgid "Track your food, reduce waste, and promote sustainable consumption."
+msgstr "আপনার খাদ্য ট্র্যাক করুন, অপচয় কমান এবং টেকসই খরচ প্রচার করুন।"
+
+msgid "Supporting"
+msgstr "সমর্থন করছে"
+
+msgid "SDG 2: Zero Hunger"
+msgstr "এসডিজি ২: শূন্য ক্ষুধা"
+
+msgid "and"
+msgstr "এবং"
+
+msgid "SDG 12: Responsible Consumption"
+msgstr "এসডিজি ১২: দায়িত্বশীল ব্যবহার"
+
+msgid "Get Started"
+msgstr "শুরু করুন"
+
+msgid "Inventory Management"
+msgstr "ইনভেন্টরি ব্যবস্থাপনা"
+
+msgid "Track your food items with expiration dates"
+msgstr "মেয়াদ শেষ হওয়ার তারিখ সহ আপনার খাদ্য আইটেম ট্র্যাক করুন"
+
+msgid "Consumption Logs"
+msgstr "খরচের লগ"
+
+msgid "Monitor your daily food usage"
+msgstr "আপনার দৈনন্দিন খাদ্য ব্যবহার পর্যবেক্ষণ করুন"
+
+msgid "Access sustainable food tips"
+msgstr "টেকসই খাদ্য টিপস অ্যাক্সেস করুন"
+
+msgid "Analytics"
+msgstr "বিশ্লেষণ"
+
+msgid "Get insights on your consumption"
+msgstr "আপনার খরচ সম্পর্কে অন্তর্দৃষ্টি পান"

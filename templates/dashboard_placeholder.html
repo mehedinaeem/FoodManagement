@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Dashboard - Food Management{% endblock %}
+{% block title %}{% trans "Dashboard" %} - {% trans "Food Management" %}{% endblock %}
 
 {% block content %}
 {% if show_welcome %}
@@ -8,9 +9,9 @@
     <div class="col-12">
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <h4 class="alert-heading">
-                <i class="bi bi-check-circle-fill"></i> Welcome back, {{ user.profile.full_name }}!
+                <i class="bi bi-check-circle-fill"></i> {% blocktrans with name=user.profile.full_name %}Welcome back, {{ name }}!{% endblocktrans %}
             </h4>
-            <p class="mb-0">You're all set to start managing your food inventory and tracking consumption.</p>
+            <p class="mb-0">{% trans "You're all set to start managing your food inventory and tracking consumption." %}</p>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </div>
@@ -25,8 +26,8 @@
                 <i class="bi bi-journal-text"></i>
             </div>
             <h3 class="mb-1" style="color: var(--primary-color);">{{ total_logs }}</h3>
-            <p class="text-muted mb-0">Food Logs</p>
-            <a href="{% url 'logs:list' %}" class="btn btn-sm btn-outline-primary mt-2">View All</a>
+            <p class="text-muted mb-0">{% trans "Food Logs" %}</p>
+            <a href="{% url 'logs:list' %}" class="btn btn-sm btn-outline-primary mt-2">{% trans "View All" %}</a>
         </div>
     </div>
     <div class="col-md-3">
@@ -35,8 +36,8 @@
                 <i class="bi bi-box-seam"></i>
             </div>
             <h3 class="mb-1" style="color: var(--secondary-color);">{{ total_inventory }}</h3>
-            <p class="text-muted mb-0">Inventory Items</p>
-            <a href="{% url 'inventory:list' %}" class="btn btn-sm btn-outline-primary mt-2">View All</a>
+            <p class="text-muted mb-0">{% trans "Inventory Items" %}</p>
+            <a href="{% url 'inventory:list' %}" class="btn btn-sm btn-outline-primary mt-2">{% trans "View All" %}</a>
         </div>
     </div>
     <div class="col-md-3">
@@ -45,8 +46,8 @@
                 <i class="bi bi-check-circle"></i>
             </div>
             <h3 class="mb-1" style="color: var(--primary-color);">{{ fresh_inventory }}</h3>
-            <p class="text-muted mb-0">Fresh Items</p>
-            <a href="{% url 'inventory:list' %}?status=fresh" class="btn btn-sm btn-outline-primary mt-2">View Fresh</a>
+            <p class="text-muted mb-0">{% trans "Fresh Items" %}</p>
+            <a href="{% url 'inventory:list' %}?status=fresh" class="btn btn-sm btn-outline-primary mt-2">{% trans "View Fresh" %}</a>
         </div>
     </div>
     <div class="col-md-3">
@@ -55,11 +56,11 @@
                 <i class="bi bi-exclamation-triangle"></i>
             </div>
             <h3 class="mb-1" style="color: #856404;">{{ expiring_soon }}</h3>
-            <p class="text-muted mb-0">Expiring Soon</p>
+            <p class="text-muted mb-0">{% trans "Expiring Soon" %}</p>
             {% if expiring_soon > 0 %}
-            <a href="{% url 'inventory:list' %}?status=expiring_soon" class="btn btn-sm btn-warning mt-2">Check Now</a>
+            <a href="{% url 'inventory:list' %}?status=expiring_soon" class="btn btn-sm btn-warning mt-2">{% trans "Check Now" %}</a>
             {% else %}
-            <span class="badge bg-success mt-2">All Good!</span>
+            <span class="badge bg-success mt-2">{% trans "All Good!" %}</span>
             {% endif %}
         </div>
     </div>
@@ -73,11 +74,11 @@
             <div class="d-flex align-items-center mb-3">
                 <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 2rem;"></i>
                 <div class="flex-grow-1">
-                    <h4 class="alert-heading mb-1">High-Risk Expiration Alerts</h4>
-                    <p class="mb-0">You have {{ expiration_alerts|length }} item{{ expiration_alerts|length|pluralize }} at high risk of expiration</p>
+                    <h4 class="alert-heading mb-1">{% trans "High-Risk Expiration Alerts" %}</h4>
+                    <p class="mb-0">{% blocktrans count count=expiration_alerts|length %}You have {{ count }} item at high risk of expiration{% plural %}You have {{ count }} items at high risk of expiration{% endblocktrans %}</p>
                 </div>
                 <a href="{% url 'ai_analytics:expiration_risks' %}" class="btn btn-danger">
-                    <i class="bi bi-arrow-right"></i> View All Risks
+                    <i class="bi bi-arrow-right"></i> {% trans "View All Risks" %}
                 </a>
             </div>
             <hr>
@@ -89,14 +90,14 @@
                             <strong>{{ alert.item_name }}</strong>
                             <br>
                             <small class="text-muted">
-                                Expires: {{ alert.expiration_date|date:"M d, Y" }} 
-                                ({{ alert.days_until_expiry }} day{{ alert.days_until_expiry|pluralize }})
+                                {% trans "Expires" %}: {{ alert.expiration_date|date:"M d, Y" }} 
+                                ({{ alert.days_until_expiry }} {% blocktrans count count=alert.days_until_expiry %}day{% plural %}days{% endblocktrans %})
                             </small>
                             <br>
-                            <small><strong>Action:</strong> {{ alert.recommended_action|truncatewords:8 }}</small>
+                            <small><strong>{% trans "Action" %}:</strong> {{ alert.recommended_action|truncatewords:8 }}</small>
                             <br>
                             <a href="{{ alert.url }}" class="btn btn-sm btn-outline-danger mt-1">
-                                View Item
+                                {% trans "View Item" %}
                             </a>
                         </div>
                     </div>
@@ -106,7 +107,7 @@
             {% if expiration_alerts|length > 3 %}
             <div class="mt-2 text-center">
                 <a href="{% url 'ai_analytics:expiration_risks' %}" class="btn btn-sm btn-outline-danger">
-                    View All {{ expiration_alerts|length }} Alerts
+                    {% blocktrans count count=expiration_alerts|length %}View All {{ count }} Alert{% plural %}View All {{ count }} Alerts{% endblocktrans %}
                 </a>
             </div>
             {% endif %}
@@ -117,8 +118,8 @@
 
 <div class="row mb-4">
     <div class="col-12">
-        <h2 class="text-primary-custom mb-4">
-            <i class="bi bi-speedometer2"></i> Quick Actions
+            <h2 class="text-primary-custom mb-4">
+            <i class="bi bi-speedometer2"></i> {% trans "Quick Actions" %}
         </h2>
     </div>
 </div>

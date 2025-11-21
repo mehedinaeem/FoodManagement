@@ -1,0 +1,57 @@
+# Spanish translations for Food Management
+# Copyright (C) 2024 Food Management
+# This file is distributed under the same license as the Food Management project.
+msgid ""
+msgstr ""
+"Project-Id-Version: Food Management 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-11-21 12:00+0000\n"
+"PO-Revision-Date: 2024-11-21 12:00+0000\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Food Management"
+msgstr "Gestión de Alimentos"
+
+msgid "Login"
+msgstr "Iniciar Sesión"
+
+msgid "Register"
+msgstr "Registrarse"
+
+msgid "Dashboard"
+msgstr "Panel de Control"
+
+msgid "Logs"
+msgstr "Registros"
+
+msgid "Inventory"
+msgstr "Inventario"
+
+msgid "Food Database"
+msgstr "Base de Datos de Alimentos"
+
+msgid "Resources"
+msgstr "Recursos"
+
+msgid "Uploads"
+msgstr "Cargas"
+
+msgid "AI Analytics"
+msgstr "Análisis de IA"
+
+msgid "Expiration Risks"
+msgstr "Riesgos de Caducidad"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Logout"
+msgstr "Cerrar Sesión"
+
+msgid "Supporting SDG 2: Zero Hunger & SDG 12: Responsible Consumption"
+msgstr "Apoyando ODS 2: Hambre Cero y ODS 12: Consumo Responsable"
+

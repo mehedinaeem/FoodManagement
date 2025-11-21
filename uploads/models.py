@@ -100,3 +100,48 @@ class Upload(models.Model):
         if self.image:
             return self.image.name.split('.')[-1].upper()
         return ""
+
+    def save(self, *args, **kwargs):
+        """Override save to run OCR after initial save when no title provided.
+
+        Behavior:
+        - Perform the normal save to ensure `image.path` exists.
+        - If no title was provided, try to run OCR to populate a title.
+        - If OCR returns an item name, set title to that; otherwise set to 'none'.
+        - Fail silently (do not raise) if OCR isn't available or errors occur.
+        """
+        # Determine whether this is a new instance (no PK yet)
+        is_new = self.pk is None
+
+        # First, save normally so file is written and path is available
+        super().save(*args, **kwargs)
+
+        # If there is already a title, or no image, nothing to do
+        if self.title or not self.image:
+            return
+
+        try:
+            # Local import to avoid circular import at module import time
+            from ai_analytics.ocr_processor import OCRProcessor
+
+            processor = OCRProcessor(self)
+            result = processor.extract_food_data()
+
+            name = None
+            if result.get('success'):
+                name = result.get('extracted_data', {}).get('item_name')
+
+            # If OCR didn't find a name, default to 'none'
+            self.title = name if name else 'none'
+
+            # Save only the title field to avoid re-uploading image
+            super().save(update_fields=['title'])
+        except Exception:
+            # On any error, fall back to 'none' (do not raise)
+            if not self.title:
+                try:
+                    self.title = 'none'
+                    super().save(update_fields=['title'])
+                except Exception:
+                    # Last-resort: ignore errors to prevent blocking uploads
+                    pass

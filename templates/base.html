@@ -1,9 +1,10 @@
+{% load i18n static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Food Management{% endblock %}</title>
+    <title>{% block title %}{% trans "Food Management" %}{% endblock %}</title>
     {% load static %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -15,14 +16,38 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="bi bi-egg-fried"></i> Food Management
+                <i class="bi bi-egg-fried"></i> {% trans "Food Management" %}
             </a>
-            <div class="navbar-nav ms-auto">
+            <div class="navbar-nav ms-auto d-flex flex-row align-items-center">
+                {% get_current_language as CURRENT_LANGUAGE %}
+                {% get_available_languages as LANGUAGES %}
+                <li class="nav-item dropdown me-3">
+                    <a class="nav-link dropdown-toggle text-white" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-translate"></i> 
+                        {% for lang_code, lang_name in LANGUAGES %}
+                            {% if lang_code == CURRENT_LANGUAGE %}{{ lang_name }}{% endif %}
+                        {% endfor %}
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+                        {% get_language_info_list for LANGUAGES as languages %}
+                        {% for language in languages %}
+                        <li>
+                            <form action="{% url 'set_language' %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="language" value="{{ language.code }}">
+                                <button type="submit" class="dropdown-item {% if language.code == CURRENT_LANGUAGE %}active{% endif %}" style="background: none; border: none; width: 100%; text-align: left;">
+                                    {{ language.name_local }} ({{ language.code }})
+                                </button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
                 <a class="nav-link" href="{% url 'accounts:login' %}">
-                    <i class="bi bi-box-arrow-in-right"></i> Login
+                    <i class="bi bi-box-arrow-in-right"></i> {% trans "Login" %}
                 </a>
                 <a class="nav-link" href="{% url 'accounts:register' %}">
-                    <i class="bi bi-person-plus"></i> Register
+                    <i class="bi bi-person-plus"></i> {% trans "Register" %}
                 </a>
             </div>
         </div>
@@ -32,7 +57,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'dashboard_placeholder' %}">
-                <i class="bi bi-egg-fried"></i> Food Management
+                <i class="bi bi-egg-fried"></i> {% trans "Food Management" %}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -41,51 +66,75 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'dashboard_placeholder' %}">
-                            <i class="bi bi-house"></i> Dashboard
+                            <i class="bi bi-house"></i> {% trans "Dashboard" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'logs:list' %}">
-                            <i class="bi bi-journal-text"></i> Logs
+                            <i class="bi bi-journal-text"></i> {% trans "Logs" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'inventory:list' %}">
-                            <i class="bi bi-box-seam"></i> Inventory
+                            <i class="bi bi-box-seam"></i> {% trans "Inventory" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'inventory:food_items_list' %}">
-                            <i class="bi bi-database"></i> Food Database
+                            <i class="bi bi-database"></i> {% trans "Food Database" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'resources:list' %}">
-                            <i class="bi bi-book"></i> Resources
+                            <i class="bi bi-book"></i> {% trans "Resources" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'uploads:list' %}">
-                            <i class="bi bi-camera-fill"></i> Uploads
+                            <i class="bi bi-camera-fill"></i> {% trans "Uploads" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'ai_analytics:dashboard' %}">
-                            <i class="bi bi-graph-up-arrow"></i> AI Analytics
+                            <i class="bi bi-graph-up-arrow"></i> {% trans "AI Analytics" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'ai_analytics:expiration_risks' %}">
-                            <i class="bi bi-exclamation-triangle"></i> Expiration Risks
+                            <i class="bi bi-exclamation-triangle"></i> {% trans "Expiration Risks" %}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'accounts:profile' %}">
-                            <i class="bi bi-person"></i> Profile
+                            <i class="bi bi-person"></i> {% trans "Profile" %}
                         </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
+                    {% get_current_language as CURRENT_LANGUAGE %}
+                    {% get_available_languages as LANGUAGES %}
+                    <li class="nav-item dropdown me-3">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="languageDropdownAuth" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-translate"></i> 
+                            {% for lang_code, lang_name in LANGUAGES %}
+                                {% if lang_code == CURRENT_LANGUAGE %}{{ lang_name }}{% endif %}
+                            {% endfor %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdownAuth">
+                            {% get_language_info_list for LANGUAGES as languages %}
+                            {% for language in languages %}
+                            <li>
+                                <form action="{% url 'set_language' %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="language" value="{{ language.code }}">
+                                    <button type="submit" class="dropdown-item {% if language.code == CURRENT_LANGUAGE %}active{% endif %}" style="background: none; border: none; width: 100%; text-align: left;">
+                                        {{ language.name_local }} ({{ language.code }})
+                                    </button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <span class="navbar-text me-3">
                             <i class="bi bi-person-circle"></i> {{ user.username }}
@@ -93,7 +142,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'accounts:logout' %}">
-                            <i class="bi bi-box-arrow-right"></i> Logout
+                            <i class="bi bi-box-arrow-right"></i> {% trans "Logout" %}
                         </a>
                     </li>
                 </ul>
@@ -120,7 +169,7 @@
         <div class="container">
             <p class="mb-0">
                 <i class="bi bi-heart-fill" style="color: #ff6b35;"></i>
-                &copy; 2024 Food Management. Supporting SDG 2: Zero Hunger & SDG 12: Responsible Consumption
+                &copy; 2024 {% trans "Food Management" %}. {% trans "Supporting SDG 2: Zero Hunger & SDG 12: Responsible Consumption" %}
             </p>
         </div>
     </footer>

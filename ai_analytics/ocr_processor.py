@@ -13,6 +13,16 @@ from django.utils import timezone
 from uploads.models import Upload
 from inventory.models import InventoryItem, FoodItem
 
+# Try to import pytesseract at module level
+try:
+    import pytesseract
+    from PIL import Image
+    PYTESSERACT_AVAILABLE = True
+except ImportError:
+    PYTESSERACT_AVAILABLE = False
+    pytesseract = None
+    Image = None
+
 
 class OCRProcessor:
     """
@@ -87,9 +97,44 @@ class OCRProcessor:
     
     def _extract_with_tesseract(self):
         """Extract text using Tesseract OCR."""
+        # Check if pytesseract is available
+        if not PYTESSERACT_AVAILABLE:
+            return {
+                'success': False,
+                'error': 'pytesseract Python package not installed',
+                'error_detail': 'Install with: pip install pytesseract',
+                'fallback': 'Please enter information manually',
+                'confidence': 0
+            }
+        
+        # Check if Tesseract binary is installed on the system
         try:
-            import pytesseract
-            from PIL import Image
+            pytesseract.get_tesseract_version()
+        except Exception as e:
+            # Tesseract binary not found - this is the most common issue
+            # pytesseract raises TesseractNotFoundError when binary is missing
+            error_type = type(e).__name__
+            error_msg = str(e).lower()
+            
+            if 'tesseractnotfound' in error_type.lower() or 'tesseract' in error_msg or 'not installed' in error_msg or 'path' in error_msg or 'not found' in error_msg:
+                return {
+                    'success': False,
+                    'error': 'Tesseract OCR engine not installed on system',
+                    'error_detail': self._get_tesseract_install_instructions(),
+                    'fallback': 'Please enter information manually',
+                    'confidence': 0
+                }
+            else:
+                # Some other error
+                return {
+                    'success': False,
+                    'error': f'Tesseract OCR error: {str(e)}',
+                    'error_detail': self._get_tesseract_install_instructions(),
+                    'fallback': 'Please enter information manually',
+                    'confidence': 0
+                }
+        
+        try:
             
             # Read image
             image = Image.open(self.image_path)
@@ -122,20 +167,62 @@ class OCRProcessor:
                 'is_partial': is_partial,
                 'missing_fields': self._get_missing_fields(extracted_data)
             }
-        except ImportError:
-            return {
-                'success': False,
-                'error': 'Tesseract OCR not installed. Install with: pip install pytesseract',
-                'fallback': 'Please enter information manually',
-                'confidence': 0
-            }
         except Exception as e:
+            error_msg = str(e)
+            # Provide helpful error messages
+            if 'tesseract' in error_msg.lower() or 'not found' in error_msg.lower():
+                return {
+                    'success': False,
+                    'error': 'Tesseract OCR engine not found',
+                    'error_detail': self._get_tesseract_install_instructions(),
+                    'fallback': 'Please enter information manually',
+                    'confidence': 0
+                }
             return {
                 'success': False,
-                'error': f'OCR processing failed: {str(e)}',
+                'error': f'OCR processing failed: {error_msg}',
                 'fallback': 'Please enter information manually',
                 'confidence': 0
             }
+    
+    def _get_tesseract_install_instructions(self):
+        """Get installation instructions for Tesseract OCR based on OS."""
+        import platform
+        os_type = platform.system().lower()
+        
+        if os_type == 'linux':
+            return (
+                "Install Tesseract OCR on Linux:\n"
+                "  Ubuntu/Debian: sudo apt-get install tesseract-ocr\n"
+                "  Fedora: sudo dnf install tesseract\n"
+                "  Arch: sudo pacman -S tesseract\n"
+                "\n"
+                "Then install Python package: pip install pytesseract"
+            )
+        elif os_type == 'darwin':  # macOS
+            return (
+                "Install Tesseract OCR on macOS:\n"
+                "  Using Homebrew: brew install tesseract\n"
+                "\n"
+                "Then install Python package: pip install pytesseract"
+            )
+        elif os_type == 'windows':
+            return (
+                "Install Tesseract OCR on Windows:\n"
+                "  1. Download installer from: https://github.com/UB-Mannheim/tesseract/wiki\n"
+                "  2. Install Tesseract (add to PATH during installation)\n"
+                "  3. Install Python package: pip install pytesseract\n"
+                "\n"
+                "Or set path manually in settings: pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'"
+            )
+        else:
+            return (
+                "Install Tesseract OCR:\n"
+                "  1. Install Tesseract OCR engine for your operating system\n"
+                "  2. Install Python package: pip install pytesseract\n"
+                "\n"
+                "See: https://github.com/tesseract-ocr/tesseract"
+            )
     
     def _extract_with_google_vision(self):
         """Extract text using Google Vision API."""
@@ -249,18 +336,23 @@ class OCRProcessor:
                     extracted['unit'] = match.group(2).lower()
                 break
         
-        # Extract expiration date (enhanced patterns)
+        # Extract expiration date (enhanced patterns - handles "Exp. Date : 14 JAN 2026")
         date_patterns = [
-            r'(EXP|EXPIRES?|USE BY|BEST BY|SELL BY)\s*:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
-            r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
-            r'(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4})',
-            r'(\d{4}[/-]\d{1,2}[/-]\d{1,2})',
+            # Pattern for "Exp. Date : 14 JAN 2026" format (with label and colon)
+            (r'(EXP\.?\s*DATE|EXPIRES?|USE BY|BEST BY|SELL BY|MFG\.?\s*DATE)\s*:?\s*(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4})', 2),  # Exp. Date : 14 JAN 2026
+            # Pattern for date with label but numeric format
+            (r'(EXP\.?\s*DATE|EXPIRES?|USE BY|BEST BY|SELL BY)\s*:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})', 2),  # EXP: 01/14/2026
+            # Standalone text date format
+            (r'(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4})', 1),  # 14 JAN 2026
+            # Standalone numeric formats
+            (r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})', 1),  # 01/14/2026
+            (r'(\d{4}[/-]\d{1,2}[/-]\d{1,2})', 1),  # 2026-01-14
         ]
         
-        for pattern in date_patterns:
+        for pattern, group_num in date_patterns:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
-                date_str = match.group(2) if len(match.groups()) > 1 else match.group(1)
+                date_str = match.group(group_num)
                 parsed_date = self._parse_date(date_str)
                 if parsed_date:
                     extracted['expiration_date'] = parsed_date
@@ -290,20 +382,47 @@ class OCRProcessor:
         # Clean the date string
         date_str = date_str.strip()
         
-        # Try common formats
+        # Remove common prefixes using regex (handles variations like "Exp. Date :", "EXP:", etc.)
+        prefix_pattern = r'^(exp\.?\s*date|expires?|exp\s*:?|use\s+by|best\s+by|sell\s+by|mfg\.?\s*date|manufacturing\s+date|lot\s*&?\s*control\s*no\.?)\s*:?\s*'
+        date_str = re.sub(prefix_pattern, '', date_str, flags=re.IGNORECASE).strip()
+        
+        # Remove leading/trailing colons, spaces, and common separators
+        date_str = date_str.strip(' :,.-')
+        
+        # Normalize month abbreviations (handle uppercase)
+        month_map = {
+            'JAN': 'Jan', 'FEB': 'Feb', 'MAR': 'Mar', 'APR': 'Apr',
+            'MAY': 'May', 'JUN': 'Jun', 'JUL': 'Jul', 'AUG': 'Aug',
+            'SEP': 'Sep', 'OCT': 'Oct', 'NOV': 'Nov', 'DEC': 'Dec'
+        }
+        for upper, lower in month_map.items():
+            date_str = date_str.replace(upper, lower)
+        
+        # Try common formats (expanded list)
         formats = [
-            '%m/%d/%Y', '%d/%m/%Y', '%Y/%m/%d',
-            '%m-%d-%Y', '%d-%m-%Y', '%Y-%m-%d',
-            '%m/%d/%y', '%d/%m/%y', '%y/%m/%d',
-            '%d %b %Y', '%d %B %Y', '%b %d, %Y', '%B %d, %Y',
+            # Text formats first (common on labels like "14 JAN 2026")
+            '%d %b %Y',  # 14 JAN 2026 (after normalization to 14 Jan 2026)
+            '%d %B %Y',  # 14 January 2026
+            '%b %d, %Y', '%B %d, %Y',  # JAN 14, 2026, January 14, 2026
+            '%d-%b-%Y', '%d-%B-%Y',  # 14-JAN-2026
+            '%Y %b %d', '%Y %B %d',  # 2026 JAN 14
+            # US formats
+            '%m/%d/%Y', '%m/%d/%y', '%m-%d-%Y', '%m-%d-%y',
+            # European formats
+            '%d/%m/%Y', '%d/%m/%y', '%d-%m-%Y', '%d-%m-%y',
+            # ISO formats
+            '%Y/%m/%d', '%Y-%m-%d',
+            # With dots
+            '%d.%m.%Y', '%d.%m.%y',
         ]
         
         for fmt in formats:
             try:
                 parsed = datetime.strptime(date_str, fmt).date()
-                # Validate reasonable date (not too far in past or future)
+                # Validate reasonable date
                 today = timezone.now().date()
-                if today - timedelta(days=365*2) <= parsed <= today + timedelta(days=365*2):
+                # Allow dates from 5 years ago (for manufacturing dates) to 10 years in future (for expiration dates)
+                if today - timedelta(days=365*5) <= parsed <= today + timedelta(days=365*10):
                     return parsed
             except:
                 continue

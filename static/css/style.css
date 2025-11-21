@@ -416,3 +416,46 @@ hr {
 .text-secondary-custom {
     color: var(--secondary-color) !important;
 }
+
+/* RTL Support for Arabic */
+html[dir="rtl"] {
+    direction: rtl;
+}
+
+html[dir="rtl"] .navbar-nav {
+    flex-direction: row-reverse;
+}
+
+html[dir="rtl"] .navbar-brand i,
+html[dir="rtl"] .nav-link i {
+    margin-left: 8px;
+    margin-right: 0;
+}
+
+html[dir="rtl"] .card-header i {
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+html[dir="rtl"] .dropdown-menu {
+    text-align: right;
+}
+
+html[dir="rtl"] .dropdown-item {
+    text-align: right;
+}
+
+html[dir="rtl"] .ms-auto {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+html[dir="rtl"] .me-3 {
+    margin-right: 0 !important;
+    margin-left: 1rem !important;
+}
+
+html[dir="rtl"] .me-2 {
+    margin-right: 0 !important;
+    margin-left: 0.5rem !important;
+}

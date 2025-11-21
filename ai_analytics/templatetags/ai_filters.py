@@ -26,3 +26,13 @@ def subtract(value, arg):
     except (ValueError, TypeError):
         return 0
 
+
+@register.filter
+def abs(value):
+    """Get absolute value of a number."""
+    try:
+        import math
+        return math.fabs(float(value))
+    except (ValueError, TypeError):
+        return 0
+

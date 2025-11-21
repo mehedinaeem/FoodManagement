@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Login - Food Management{% endblock %}
+{% block title %}{% trans "Login" %} - {% trans "Food Management" %}{% endblock %}
 
 {% block content %}
 <div class="auth-container">
@@ -9,16 +10,16 @@
             <div class="auth-card">
                 <div class="card-header text-white">
                     <h3 class="card-title mb-0">
-                        <i class="bi bi-box-arrow-in-right"></i> Welcome Back!
+                        <i class="bi bi-box-arrow-in-right"></i> {% trans "Welcome Back!" %}
                     </h3>
-                    <p class="mb-0 mt-2" style="opacity: 0.9; font-size: 0.9rem;">Sign in to manage your food inventory</p>
+                    <p class="mb-0 mt-2" style="opacity: 0.9; font-size: 0.9rem;">{% trans "Sign in to manage your food inventory" %}</p>
                 </div>
             <div class="card-body">
                 <form method="post" novalidate>
                     {% csrf_token %}
                     
                     <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}" class="form-label">Username or Email</label>
+                        <label for="{{ form.username.id_for_label }}" class="form-label">{% trans "Username or Email" %}</label>
                         {{ form.username }}
                         {% if form.username.errors %}
                             <div class="text-danger small">{{ form.username.errors }}</div>
@@ -26,7 +27,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                        <label for="{{ form.password.id_for_label }}" class="form-label">{% trans "Password" %}</label>
                         {{ form.password }}
                         {% if form.password.errors %}
                             <div class="text-danger small">{{ form.password.errors }}</div>
@@ -38,15 +39,15 @@
 
                     <div class="d-grid mb-3">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-box-arrow-in-right"></i> Login
+                            <i class="bi bi-box-arrow-in-right"></i> {% trans "Login" %}
                         </button>
                     </div>
                 </form>
 
                 <hr class="my-4">
                 <p class="text-center mb-0">
-                    Don't have an account? 
-                    <a href="{% url 'accounts:register' %}" class="fw-bold">Register here <i class="bi bi-arrow-right"></i></a>
+                    {% trans "Don't have an account?" %} 
+                    <a href="{% url 'accounts:register' %}" class="fw-bold">{% trans "Register here" %} <i class="bi bi-arrow-right"></i></a>
                 </p>
             </div>
         </div>
