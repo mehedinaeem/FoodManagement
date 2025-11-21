@@ -28,6 +28,7 @@ urlpatterns = [
     path('inventory/', include('inventory.urls')),
     path('resources/', include('resources.urls')),
     path('uploads/', include('uploads.urls')),
+    path('ai/', include('ai_analytics.urls')),
     # Temporary dashboard placeholder - will be replaced when dashboard app is created
     path('dashboard/', views.dashboard_placeholder, name='dashboard_placeholder'),
 ]

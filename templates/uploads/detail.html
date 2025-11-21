@@ -67,7 +67,10 @@
                 </div>
                 {% endif %}
 
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'ai_analytics:process_ocr' upload.pk %}" class="btn btn-warning">
+                        <i class="bi bi-camera"></i> Process with OCR
+                    </a>
                     <a href="{% url 'uploads:delete' upload.pk %}" class="btn btn-danger">
                         <i class="bi bi-trash"></i> Delete
                     </a>

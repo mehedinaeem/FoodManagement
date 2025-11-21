@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-graph-up-arrow"></i> AI Analytics Dashboard
+            </h1>
+            <p class="lead">Advanced insights powered by AI for better food management</p>
+        </div>
+    </div>
+
+    <!-- SDG Impact Score Card -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        <i class="bi bi-trophy-fill text-warning"></i> Your SDG Impact Score
+                    </h3>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h2 class="display-3 text-primary">{{ sdg_score.overall_score }}</h2>
+                                <p class="text-muted">Overall Score</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3 class="text-success">{{ sdg_score.waste_reduction_score }}</h3>
+                                <p class="text-muted">Waste Reduction</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3 class="text-info">{{ sdg_score.nutrition_score }}</h3>
+                                <p class="text-muted">Nutrition</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3 class="text-warning">{{ sdg_score.sustainability_score }}</h3>
+                                <p class="text-muted">Sustainability</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'ai_analytics:sdg_impact' %}" class="btn btn-primary">
+                            View Detailed Analysis <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow border-0 mb-3">
+                <div class="card-body text-center">
+                    <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 2rem;"></i>
+                    <h4 class="mt-2">{{ waste_predictions|length }}</h4>
+                    <p class="text-muted">Items at Waste Risk</p>
+                    <a href="{% url 'ai_analytics:waste_analysis' %}" class="btn btn-sm btn-outline-warning">View Details</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow border-0 mb-3">
+                <div class="card-body text-center">
+                    <i class="bi bi-currency-dollar text-success" style="font-size: 2rem;"></i>
+                    <h4 class="mt-2">${{ weekly_waste.total_waste_cost|floatformat:2 }}</h4>
+                    <p class="text-muted">Weekly Waste Cost</p>
+                    <a href="{% url 'ai_analytics:waste_analysis' %}" class="btn btn-sm btn-outline-success">View Analysis</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow border-0 mb-3">
+                <div class="card-body text-center">
+                    <i class="bi bi-heart-pulse-fill text-danger" style="font-size: 2rem;"></i>
+                    <h4 class="mt-2">{{ nutrient_gaps|length }}</h4>
+                    <p class="text-muted">Nutrient Gaps Detected</p>
+                    <a href="{% url 'ai_analytics:consumption_patterns' %}" class="btn btn-sm btn-outline-danger">View Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waste Predictions -->
+    {% if waste_predictions %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Items at Risk of Waste
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Waste Risk</th>
+                                    <th>Days Until Expiry</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pred in waste_predictions %}
+                                <tr>
+                                    <td><strong>{{ pred.item_name }}</strong></td>
+                                    <td><span class="badge bg-secondary">{{ pred.category|title }}</span></td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if pred.predicted_waste_probability > 70 %}bg-danger{% elif pred.predicted_waste_probability > 40 %}bg-warning{% else %}bg-info{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ pred.predicted_waste_probability }}%"
+                                                 aria-valuenow="{{ pred.predicted_waste_probability }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ pred.predicted_waste_probability }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ pred.days_until_expiry }} days</td>
+                                    <td>
+                                        {% if pred.inventory_item %}
+                                        <a href="{% url 'inventory:detail' pred.inventory_item.id %}" class="btn btn-sm btn-primary">View Item</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Category Imbalances -->
+    {% if imbalances %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart"></i> Consumption Pattern Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for imbalance in imbalances %}
+                    <div class="alert alert-{% if imbalance.severity == 'high' %}danger{% elif imbalance.severity == 'medium' %}warning{% else %}info{% endif %}">
+                        <strong>{{ imbalance.category|title }}:</strong> {{ imbalance.description }}
+                        <br>
+                        <small>Actual: {{ imbalance.actual|floatformat:1 }}% | Expected: {{ imbalance.expected|floatformat:1 }}%</small>
+                    </div>
+                    {% endfor %}
+                    <a href="{% url 'ai_analytics:consumption_patterns' %}" class="btn btn-info">View Full Analysis</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3">AI-Powered Features</h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow border-0 h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3">Consumption Patterns</h5>
+                    <p class="text-muted">Analyze your weekly trends</p>
+                    <a href="{% url 'ai_analytics:consumption_patterns' %}" class="btn btn-primary">View</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow border-0 h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check text-success" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3">Meal Optimizer</h5>
+                    <p class="text-muted">Optimize your meal plan</p>
+                    <a href="{% url 'ai_analytics:meal_optimizer' %}" class="btn btn-success">Optimize</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow border-0 h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-dots text-info" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3">NourishBot</h5>
+                    <p class="text-muted">Chat with AI assistant</p>
+                    <a href="{% url 'ai_analytics:chatbot' %}" class="btn btn-info">Chat</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow border-0 h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-camera text-warning" style="font-size: 2.5rem;"></i>
+                    <h5 class="mt-3">OCR Scanner</h5>
+                    <p class="text-muted">Scan food labels</p>
+                    <a href="{% url 'uploads:list' %}" class="btn btn-warning">Scan</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

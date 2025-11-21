@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}NourishBot - AI Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-robot"></i> NourishBot
+            </h1>
+            <p class="lead">Your AI-powered food management assistant</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-dots"></i> Chat with NourishBot
+                        {% if has_openai %}
+                        <span class="badge bg-success ms-2">AI Enabled</span>
+                        {% else %}
+                        <span class="badge bg-secondary ms-2">Rule-Based Mode</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body" style="height: 500px; overflow-y: auto;" id="chat-messages">
+                    {% for message in conversation_history %}
+                    <div class="mb-3">
+                        {% if message.role == 'user' %}
+                        <div class="d-flex justify-content-end">
+                            <div class="bg-primary text-white p-3 rounded" style="max-width: 70%;">
+                                <strong>You:</strong><br>
+                                {{ message.content }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="d-flex justify-content-start">
+                            <div class="bg-light p-3 rounded" style="max-width: 70%;">
+                                <strong><i class="bi bi-robot"></i> NourishBot:</strong><br>
+                                {{ message.content|linebreaks }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted mt-5">
+                        <i class="bi bi-chat-quote" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Start a conversation with NourishBot!</p>
+                        <p>Ask about waste reduction, nutrition, meal planning, or anything food-related.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <form id="chat-form" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="use_ai" value="{% if has_openai %}true{% else %}false{% endif %}" id="use-ai-input">
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="message" 
+                                   id="message-input" 
+                                   placeholder="Ask NourishBot anything about food management..."
+                                   required>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-send"></i> Send
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow border-0 mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">Quick Questions</h6>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-outline-info btn-sm w-100 mb-2 quick-question" data-question="How can I reduce food waste?">
+                        Reduce Food Waste
+                    </button>
+                    <button class="btn btn-outline-info btn-sm w-100 mb-2 quick-question" data-question="What should I eat for better nutrition?">
+                        Nutrition Advice
+                    </button>
+                    <button class="btn btn-outline-info btn-sm w-100 mb-2 quick-question" data-question="Help me plan meals for this week">
+                        Meal Planning
+                    </button>
+                    <button class="btn btn-outline-info btn-sm w-100 mb-2 quick-question" data-question="What can I do with my leftovers?">
+                        Leftover Ideas
+                    </button>
+                    <button class="btn btn-outline-info btn-sm w-100 mb-2 quick-question" data-question="How does my food waste impact the environment?">
+                        Environmental Impact
+                    </button>
+                </div>
+            </div>
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">Capabilities</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success"></i> Waste reduction tips</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Nutrition balancing</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Meal planning</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Leftover recipes</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Food sharing</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Environmental impact</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const chatMessages = document.getElementById('chat-messages');
+    
+    // Quick question buttons
+    document.querySelectorAll('.quick-question').forEach(btn => {
+        btn.addEventListener('click', function() {
+            messageInput.value = this.dataset.question;
+            messageInput.focus();
+        });
+    });
+    
+    // Auto-scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Handle form submission with AJAX
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        if (!message) return;
+        
+        // Add user message to chat
+        const userMsgDiv = document.createElement('div');
+        userMsgDiv.className = 'mb-3';
+        userMsgDiv.innerHTML = `
+            <div class="d-flex justify-content-end">
+                <div class="bg-primary text-white p-3 rounded" style="max-width: 70%;">
+                    <strong>You:</strong><br>
+                    ${message}
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(userMsgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Clear input
+        messageInput.value = '';
+        
+        // Show loading
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'mb-3';
+        loadingDiv.innerHTML = `
+            <div class="d-flex justify-content-start">
+                <div class="bg-light p-3 rounded">
+                    <i class="bi bi-hourglass-split"></i> NourishBot is thinking...
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(loadingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Send AJAX request
+        fetch('{% url "ai_analytics:chatbot" %}?session_id={{ session_id }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'message': message,
+                'use_ai': document.getElementById('use-ai-input').value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove loading
+            loadingDiv.remove();
+            
+            // Add bot response
+            const botMsgDiv = document.createElement('div');
+            botMsgDiv.className = 'mb-3';
+            botMsgDiv.innerHTML = `
+                <div class="d-flex justify-content-start">
+                    <div class="bg-light p-3 rounded" style="max-width: 70%;">
+                        <strong><i class="bi bi-robot"></i> NourishBot:</strong><br>
+                        ${data.response.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(botMsgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingDiv.remove();
+            alert('Error sending message. Please try again.');
+        });
+    });
+});
+</script>
+{% endblock %}
+

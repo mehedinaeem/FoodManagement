@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'inventory',
     'resources',
     'uploads',
+    'ai_analytics',
 ]
 
 MIDDLEWARE = [

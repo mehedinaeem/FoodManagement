@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SDG Impact Score{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-trophy-fill text-warning"></i> Your SDG Impact Score
+            </h1>
+            <p class="lead">Track your progress towards Sustainable Development Goals</p>
+        </div>
+    </div>
+
+    <!-- Current Score -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-body">
+                    <h3 class="mb-4">Current Week Score</h3>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-4">
+                                <div class="display-2 text-primary">{{ current_score.overall_score }}</div>
+                                <p class="text-muted mt-2">Overall Score</p>
+                                <div class="progress mt-2" style="height: 10px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ current_score.overall_score }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-4">
+                                <div class="display-4 text-success">{{ current_score.waste_reduction_score }}</div>
+                                <p class="text-muted mt-2">Waste Reduction</p>
+                                <div class="progress mt-2" style="height: 10px;">
+                                    <div class="progress-bar bg-success" style="width: {{ current_score.waste_reduction_score }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-4">
+                                <div class="display-4 text-info">{{ current_score.nutrition_score }}</div>
+                                <p class="text-muted mt-2">Nutrition</p>
+                                <div class="progress mt-2" style="height: 10px;">
+                                    <div class="progress-bar bg-info" style="width: {{ current_score.nutrition_score }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-4">
+                                <div class="display-4 text-warning">{{ current_score.sustainability_score }}</div>
+                                <p class="text-muted mt-2">Sustainability</p>
+                                <div class="progress mt-2" style="height: 10px;">
+                                    <div class="progress-bar bg-warning" style="width: {{ current_score.sustainability_score }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights -->
+    {% if current_score.insights %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">AI Insights</h5>
+                </div>
+                <div class="card-body">
+                    {% for insight in current_score.insights %}
+                    <div class="alert alert-{% if insight.type == 'warning' %}warning{% elif insight.type == 'success' %}success{% else %}info{% endif %}">
+                        <strong>{{ insight.category|title }}:</strong> {{ insight.message }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actionable Steps -->
+    {% if current_score.actionable_steps %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Actionable Steps to Improve</h5>
+                </div>
+                <div class="card-body">
+                    {% for step in current_score.actionable_steps %}
+                    <div class="card mb-2 {% if step.priority == 'high' %}border-danger{% else %}border-warning{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ step.action }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ step.category|title }} • Expected improvement: {{ step.expected_improvement }}</small>
+                                </div>
+                                <span class="badge {% if step.priority == 'high' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                    {{ step.priority|title }} Priority
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Historical Scores -->
+    {% if historical_scores %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Historical Scores (Last 12 Weeks)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Week</th>
+                                    <th>Overall</th>
+                                    <th>Waste Reduction</th>
+                                    <th>Nutrition</th>
+                                    <th>Sustainability</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score in historical_scores %}
+                                <tr>
+                                    <td>{{ score.week_start_date|date:"M d, Y" }}</td>
+                                    <td><strong>{{ score.overall_score }}</strong></td>
+                                    <td>{{ score.waste_reduction_score }}</td>
+                                    <td>{{ score.nutrition_score }}</td>
+                                    <td>{{ score.sustainability_score }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

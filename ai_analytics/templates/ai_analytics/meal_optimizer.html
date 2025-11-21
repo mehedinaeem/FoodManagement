@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meal Optimizer{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-calendar-check"></i> AI Meal Optimizer
+            </h1>
+            <p class="lead">Optimize your weekly meal plan based on budget, inventory, and nutrition</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear"></i> Configure Meal Plan
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="budget_limit" class="form-label">
+                                <strong>Weekly Budget Limit (USD)</strong>
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="budget_limit" 
+                                   name="budget_limit" 
+                                   value="{{ default_budget }}"
+                                   min="20" 
+                                   max="500" 
+                                   step="5"
+                                   required>
+                            <small class="form-text text-muted">
+                                The optimizer will try to create a meal plan within this budget.
+                            </small>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>How it works:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Prioritizes using items from your inventory (especially expiring ones)</li>
+                                <li>Ensures minimum nutrition requirements are met</li>
+                                <li>Suggests items from the food database to fill gaps</li>
+                                <li>Provides a shopping list with estimated costs</li>
+                            </ul>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-magic"></i> Generate Optimized Meal Plan
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow border-0 mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">Your Profile</h6>
+                </div>
+                <div class="card-body">
+                    {% if user.profile %}
+                    <p><strong>Household Size:</strong> {{ user.profile.household_size }}</p>
+                    <p><strong>Dietary Preferences:</strong> {{ user.profile.get_dietary_preferences_display }}</p>
+                    <p><strong>Budget Range:</strong> {{ user.profile.get_budget_range_display }}</p>
+                    {% else %}
+                    <p class="text-muted">Profile not set up. <a href="{% url 'accounts:profile' %}">Update profile</a></p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">Tips</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-lightbulb text-warning"></i> Lower budgets = more inventory usage</li>
+                        <li><i class="bi bi-lightbulb text-warning"></i> Check your inventory before optimizing</li>
+                        <li><i class="bi bi-lightbulb text-warning"></i> Adjust budget based on your needs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
