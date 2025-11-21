@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Uploads - Food Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-primary-custom mb-0">
+                <i class="bi bi-camera-fill"></i> Image Uploads
+            </h2>
+            <a href="{% url 'uploads:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle-fill"></i> Upload Image
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Card -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                <i class="bi bi-images"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ total_uploads }}</h3>
+            <p class="text-muted mb-0">Total Uploads</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-secondary);">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--secondary-color);">{{ uploads_by_type|length }}</h3>
+            <p class="text-muted mb-0">Upload Types</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-success);">
+                <i class="bi bi-link-45deg"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">Ready</h3>
+            <p class="text-muted mb-0">For Future AI</p>
+        </div>
+    </div>
+</div>
+
+<!-- Uploads Grid -->
+{% if uploads %}
+<div class="row g-4">
+    {% for upload in uploads %}
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100">
+            <div class="position-relative">
+                <img src="{{ upload.image.url }}" class="card-img-top" alt="{{ upload.title|default:'Upload' }}" style="height: 200px; object-fit: cover; cursor: pointer;" onclick="window.location='{% url 'uploads:detail' upload.pk %}'">
+                {% if upload.associated_inventory or upload.associated_log %}
+                <span class="badge bg-success position-absolute top-0 end-0 m-2">
+                    <i class="bi bi-link-45deg"></i> Linked
+                </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">{{ upload.title|default:"Untitled" }}</h6>
+                <p class="card-text small text-muted mb-2">
+                    <span class="badge" style="background: var(--gradient-secondary);">
+                        {{ upload.get_upload_type_display }}
+                    </span>
+                </p>
+                {% if upload.associated_inventory %}
+                <p class="small mb-1">
+                    <i class="bi bi-box-seam"></i> Linked to: {{ upload.associated_inventory.item_name }}
+                </p>
+                {% elif upload.associated_log %}
+                <p class="small mb-1">
+                    <i class="bi bi-journal-text"></i> Linked to: {{ upload.associated_log.item_name }}
+                </p>
+                {% else %}
+                <p class="small text-muted mb-1">Not linked</p>
+                {% endif %}
+                <p class="small text-muted mb-0">
+                    <i class="bi bi-calendar"></i> {{ upload.created_at|date:"M d, Y" }}
+                </p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group btn-group-sm w-100">
+                    <a href="{% url 'uploads:detail' upload.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                    <a href="{% url 'uploads:delete' upload.pk %}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-camera" style="font-size: 4rem; color: #ccc;"></i>
+        <p class="text-muted mt-3">No uploads yet. Start uploading receipts and food labels!</p>
+        <a href="{% url 'uploads:create' %}" class="btn btn-primary mt-2">
+            <i class="bi bi-plus-circle"></i> Upload First Image
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

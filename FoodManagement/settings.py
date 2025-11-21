@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'logs',
     'inventory',
     'resources',
+    'uploads',
 ]
 
 MIDDLEWARE = [

@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
 from .models import Resource
 from .forms import ResourceFilterForm
+from .tracking import TrackingAnalyzer
 
 
 @login_required
@@ -84,3 +85,28 @@ def resource_detail(request, pk):
     }
     
     return render(request, 'resources/detail.html', context)
+
+
+@login_required
+def tracking_view(request):
+    """
+    Display tracking analysis with summaries and recommendations.
+    """
+    analyzer = TrackingAnalyzer(request.user)
+    
+    # Get summary
+    summary = analyzer.get_summary()
+    
+    # Get recommendations
+    recommendations = analyzer.get_recommendations(limit=6)
+    
+    # Get insights
+    insights = analyzer.get_insights()
+    
+    context = {
+        'summary': summary,
+        'recommendations': recommendations,
+        'insights': insights,
+    }
+    
+    return render(request, 'resources/tracking.html', context)

@@ -17,7 +17,7 @@ def home_view(request):
 @login_required
 def dashboard_placeholder(request):
     """
-    Dashboard with user statistics and quick actions.
+    Dashboard with user statistics, quick actions, and recommended resources.
     """
     user = request.user
     
@@ -33,6 +33,11 @@ def dashboard_placeholder(request):
     # Recent inventory items (last 5)
     recent_inventory = InventoryItem.objects.filter(user=user).order_by('-created_at')[:5]
     
+    # Get recommended resources using tracking logic
+    from resources.tracking import TrackingAnalyzer
+    analyzer = TrackingAnalyzer(user)
+    recommended_resources = analyzer.get_recommendations(limit=3)
+    
     # Check if user has seen welcome message (using session)
     show_welcome = request.session.get('show_welcome', True)
     if show_welcome:
@@ -46,6 +51,7 @@ def dashboard_placeholder(request):
         'expiring_soon': expiring_soon,
         'recent_logs': recent_logs,
         'recent_inventory': recent_inventory,
+        'recommended_resources': recommended_resources,
         'show_welcome': show_welcome,
     }
     

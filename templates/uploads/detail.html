@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ upload.title|default:"Upload" }} - Food Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="{% url 'uploads:list' %}" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Back to Uploads
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-image"></i> {{ upload.title|default:"Untitled Upload" }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <img src="{{ upload.image.url }}" class="img-fluid rounded shadow" alt="{{ upload.title|default:'Upload' }}" style="max-height: 500px;">
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="text-primary-custom">Upload Information</h5>
+                        <p class="mb-2"><strong>Type:</strong> 
+                            <span class="badge" style="background: var(--gradient-secondary);">
+                                {{ upload.get_upload_type_display }}
+                            </span>
+                        </p>
+                        <p class="mb-2"><strong>File Size:</strong> {{ upload.get_file_size }}</p>
+                        <p class="mb-2"><strong>File Type:</strong> {{ upload.get_file_extension }}</p>
+                        <p class="mb-2"><strong>Uploaded:</strong> {{ upload.created_at|date:"F d, Y g:i A" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-primary-custom">Current Association</h5>
+                        {% if upload.associated_inventory %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-box-seam"></i> <strong>Linked to Inventory:</strong><br>
+                            <a href="{% url 'inventory:detail' upload.associated_inventory.pk %}" class="alert-link">
+                                {{ upload.associated_inventory.item_name }}
+                            </a>
+                        </div>
+                        {% elif upload.associated_log %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-journal-text"></i> <strong>Linked to Food Log:</strong><br>
+                            <a href="{% url 'logs:detail' upload.associated_log.pk %}" class="alert-link">
+                                {{ upload.associated_log.item_name }} ({{ upload.associated_log.date_consumed|date:"M d, Y" }})
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Not currently associated with any inventory item or food log.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if upload.description %}
+                <div class="mb-4">
+                    <h5 class="text-primary-custom">Description</h5>
+                    <p class="bg-light p-3 rounded">{{ upload.description }}</p>
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <a href="{% url 'uploads:delete' upload.pk %}" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                    <a href="{% url 'uploads:list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header text-white" style="background: var(--gradient-secondary);">
+                <h5 class="mb-0">
+                    <i class="bi bi-link-45deg"></i> Associate Upload
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.association_type.id_for_label }}" class="form-label">Association Type</label>
+                        {{ form.association_type }}
+                        {% if form.association_type.errors %}
+                            <div class="text-danger small">{{ form.association_type.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3" id="inventory-field" style="display: none;">
+                        <label for="{{ form.inventory_item.id_for_label }}" class="form-label">Inventory Item</label>
+                        {{ form.inventory_item }}
+                        {% if form.inventory_item.errors %}
+                            <div class="text-danger small">{{ form.inventory_item.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3" id="log-field" style="display: none;">
+                        <label for="{{ form.food_log.id_for_label }}" class="form-label">Food Log</label>
+                        {{ form.food_log }}
+                        {% if form.food_log.errors %}
+                            <div class="text-danger small">{{ form.food_log.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-circle"></i> Save Association
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAssociationFields() {
+    const associationType = document.getElementById('id_association_type').value;
+    const inventoryField = document.getElementById('inventory-field');
+    const logField = document.getElementById('log-field');
+    
+    // Hide all fields first
+    inventoryField.style.display = 'none';
+    logField.style.display = 'none';
+    
+    // Show relevant field based on selection
+    if (associationType === 'inventory') {
+        inventoryField.style.display = 'block';
+    } else if (associationType === 'log') {
+        logField.style.display = 'block';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleAssociationFields();
+    document.getElementById('id_association_type').addEventListener('change', toggleAssociationFields);
+});
+</script>
+{% endblock %}
+

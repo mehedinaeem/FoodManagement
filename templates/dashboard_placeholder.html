@@ -156,9 +156,9 @@
                 <h5 class="card-title mb-0 ms-3">Uploads</h5>
             </div>
             <p class="card-text text-muted">Upload receipts and food labels for future scanning features.</p>
-            <button class="btn btn-secondary" disabled>
-                <i class="bi bi-clock"></i> Coming Soon
-            </button>
+            <a href="{% url 'uploads:list' %}" class="btn btn-primary">
+                <i class="bi bi-arrow-right-circle"></i> View Uploads
+            </a>
         </div>
     </div>
 </div>
@@ -244,7 +244,7 @@
 </div>
 
 <div class="row mt-5">
-    <div class="col-12">
+    <div class="col-md-6">
         <div class="card" style="background: var(--gradient-primary); color: white;">
             <div class="card-body text-center p-4">
                 <h4 class="mb-3">
@@ -252,6 +252,20 @@
                     Ready to Reduce Food Waste?
                 </h4>
                 <p class="mb-0">Start tracking your food inventory and consumption to make a positive impact on the environment!</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card" style="background: var(--gradient-secondary); color: white;">
+            <div class="card-body text-center p-4">
+                <h4 class="mb-3">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    Get Personalized Recommendations
+                </h4>
+                <p class="mb-3">View insights and recommendations based on your consumption patterns.</p>
+                <a href="{% url 'resources:tracking' %}" class="btn btn-light">
+                    <i class="bi bi-arrow-right-circle"></i> View Tracking & Recommendations
+                </a>
             </div>
         </div>
     </div>

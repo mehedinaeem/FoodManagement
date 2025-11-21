@@ -6,5 +6,6 @@ app_name = 'resources'
 urlpatterns = [
     path('', views.resource_list, name='list'),
     path('<int:pk>/', views.resource_detail, name='detail'),
+    path('tracking/', views.tracking_view, name='tracking'),
 ]
 

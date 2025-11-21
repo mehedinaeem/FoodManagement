@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Tracking & Recommendations - Food Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-primary-custom mb-0">
+            <i class="bi bi-graph-up-arrow"></i> Tracking & Recommendations
+        </h2>
+        <p class="text-muted">Insights based on your food consumption and inventory patterns</p>
+    </div>
+</div>
+
+<!-- Insights/Alerts -->
+{% if insights %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for insight in insights %}
+        <div class="alert alert-{{ insight.type }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if insight.type == 'warning' %}exclamation-triangle{% elif insight.type == 'danger' %}x-circle{% else %}info-circle{% endif %}-fill"></i>
+            {{ insight.message }}
+            {% if insight.action %}
+            <a href="{{ insight.action_url }}" class="alert-link ms-2">{{ insight.action }} →</a>
+            {% endif %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Summary Statistics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ summary.total_logs }}</h3>
+            <p class="text-muted mb-0">Total Food Logs</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-secondary);">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--secondary-color);">{{ summary.total_inventory }}</h3>
+            <p class="text-muted mb-0">Inventory Items</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-success);">
+                <i class="bi bi-calendar-week"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ summary.recent_logs }}</h3>
+            <p class="text-muted mb-0">Logs This Week</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: linear-gradient(135deg, #ffe66d 0%, #ffd93d 100%);">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <h3 class="mb-1" style="color: #856404;">{{ summary.expiring_soon }}</h3>
+            <p class="text-muted mb-0">Expiring Soon</p>
+        </div>
+    </div>
+</div>
+
+<!-- Category Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-pie-chart"></i> Top Logged Categories
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if summary.top_logged_categories %}
+                    <ul class="list-group list-group-flush">
+                        {% for category, count in summary.top_logged_categories.items %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="badge" style="background: var(--gradient-secondary);">
+                                {{ category|title }}
+                            </span>
+                            <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center py-3">No food logs yet. Start logging to see your patterns!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-box-seam"></i> Top Inventory Categories
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if summary.top_inventory_categories %}
+                    <ul class="list-group list-group-flush">
+                        {% for category, count in summary.top_inventory_categories.items %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="badge" style="background: var(--gradient-secondary);">
+                                {{ category|title }}
+                            </span>
+                            <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center py-3">No inventory items yet. Add items to see your patterns!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommended Resources -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h3 class="text-primary-custom mb-3">
+            <i class="bi bi-lightbulb-fill"></i> Recommended Resources for You
+        </h3>
+        <p class="text-muted">Based on your consumption and inventory patterns</p>
+    </div>
+</div>
+
+{% if recommendations %}
+<div class="row g-4">
+    {% for resource, category, explanation in recommendations %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-start mb-3">
+                    <i class="bi {{ resource.get_type_icon }} text-primary me-2" style="font-size: 1.5rem;"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-1">{{ resource.title }}</h5>
+                        <div class="mb-2">
+                            <span class="badge" style="background: var(--gradient-secondary);">
+                                {{ resource.get_category_display }}
+                            </span>
+                            {% if resource.featured %}
+                            <span class="badge bg-warning text-dark ms-1">
+                                <i class="bi bi-star-fill"></i> Featured
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="card-text text-muted small">{{ resource.description|truncatewords:20 }}</p>
+                
+                <!-- Explanation -->
+                <div class="alert alert-info small mb-3">
+                    <i class="bi bi-info-circle"></i> <strong>Why recommended:</strong><br>
+                    {{ explanation }}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'resources:detail' resource.pk %}" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-eye"></i> View Resource
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-info-circle" style="font-size: 4rem; color: #ccc;"></i>
+        <p class="text-muted mt-3">Start logging your food consumption and adding inventory items to get personalized recommendations!</p>
+        <div class="mt-3">
+            <a href="{% url 'logs:create' %}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-circle"></i> Log Food
+            </a>
+            <a href="{% url 'inventory:create' %}" class="btn btn-outline-primary">
+                <i class="bi bi-plus-circle"></i> Add Inventory
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- How It Works -->
+<div class="card mt-4">
+    <div class="card-header text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-question-circle"></i> How Recommendations Work
+        </h5>
+    </div>
+    <div class="card-body">
+        <p class="mb-3">Our tracking system uses simple, transparent rules to recommend resources:</p>
+        <ul class="list-unstyled">
+            <li class="mb-2">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <strong>Category Matching:</strong> If you log or have inventory items in a category (e.g., dairy), 
+                we recommend relevant resource categories (e.g., storage tips, waste reduction).
+            </li>
+            <li class="mb-2">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <strong>Pattern Detection:</strong> If you have items expiring soon, we recommend preservation and 
+                waste reduction resources.
+            </li>
+            <li class="mb-2">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <strong>Activity-Based:</strong> Based on your logging frequency and inventory size, 
+                we suggest meal planning and budget tips.
+            </li>
+            <li class="mb-0">
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <strong>Transparent:</strong> Each recommendation includes an explanation of why it was suggested.
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
