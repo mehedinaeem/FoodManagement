@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Food Management - Reduce Waste, Save Money{% endblock %}
+
+{% block content %}
+<div class="row align-items-center min-vh-100 py-5">
+    <div class="col-lg-6">
+        <div class="text-center text-lg-start">
+            <h1 class="display-3 fw-bold mb-4" style="color: var(--primary-color);">
+                <i class="bi bi-egg-fried"></i> Food Management
+            </h1>
+            <p class="lead mb-4" style="color: var(--dark-color); font-size: 1.3rem;">
+                Track your food, reduce waste, and promote sustainable consumption. 
+                Supporting <strong>SDG 2: Zero Hunger</strong> and <strong>SDG 12: Responsible Consumption</strong>.
+            </p>
+            <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-person-plus-fill"></i> Get Started
+                </a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mt-5 mt-lg-0">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="dashboard-card text-center">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <h5 class="fw-bold">Inventory Management</h5>
+                    <p class="text-muted">Track your food items with expiration dates</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card text-center">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem; background: var(--gradient-secondary);">
+                        <i class="bi bi-journal-text"></i>
+                    </div>
+                    <h5 class="fw-bold">Consumption Logs</h5>
+                    <p class="text-muted">Monitor your daily food usage</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card text-center">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem; background: var(--gradient-success);">
+                        <i class="bi bi-book-fill"></i>
+                    </div>
+                    <h5 class="fw-bold">Resources</h5>
+                    <p class="text-muted">Access sustainable food tips</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card text-center">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem; background: linear-gradient(135deg, #ffe66d 0%, #ffd93d 100%);">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h5 class="fw-bold">Analytics</h5>
+                    <p class="text-muted">Get insights on your consumption</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

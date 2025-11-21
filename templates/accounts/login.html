@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Food Management{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-5 col-lg-4">
+            <div class="auth-card">
+                <div class="card-header text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-box-arrow-in-right"></i> Welcome Back!
+                    </h3>
+                    <p class="mb-0 mt-2" style="opacity: 0.9; font-size: 0.9rem;">Sign in to manage your food inventory</p>
+                </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Username or Email</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger small">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger small">{{ form.password.errors }}</div>
+                        {% endif %}
+                        {% if form.non_field_errors %}
+                            <div class="text-danger small">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+                <p class="text-center mb-0">
+                    Don't have an account? 
+                    <a href="{% url 'accounts:register' %}" class="fw-bold">Register here <i class="bi bi-arrow-right"></i></a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

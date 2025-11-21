@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Food Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h4 class="alert-heading">
+                <i class="bi bi-info-circle-fill"></i> Welcome to Food Management!
+            </h4>
+            <p class="mb-2">This is a temporary dashboard. The full dashboard with tracking and analytics will be implemented soon.</p>
+            <hr>
+            <p class="mb-0">
+                Welcome back, <strong style="color: var(--primary-color);">{{ user.profile.full_name }}</strong>! 
+                <i class="bi bi-check-circle-fill text-success"></i> Your authentication system is working perfectly.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-primary-custom mb-4">
+            <i class="bi bi-speedometer2"></i> Quick Actions
+        </h2>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="dashboard-card">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                    <i class="bi bi-person-circle-fill"></i>
+                </div>
+                <h5 class="card-title mb-0 ms-3">Profile</h5>
+            </div>
+            <p class="card-text text-muted">Manage your profile, dietary preferences, and account settings.</p>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-primary">
+                <i class="bi bi-arrow-right-circle"></i> View Profile
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-secondary);">
+                    <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <h5 class="card-title mb-0 ms-3">Inventory</h5>
+            </div>
+            <p class="card-text text-muted">Track and manage your food inventory with expiration dates.</p>
+            <button class="btn btn-secondary" disabled>
+                <i class="bi bi-clock"></i> Coming Soon
+            </button>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-success);">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+                <h5 class="card-title mb-0 ms-3">Logs</h5>
+            </div>
+            <p class="card-text text-muted">Log your daily food consumption and track usage patterns.</p>
+            <button class="btn btn-secondary" disabled>
+                <i class="bi bi-clock"></i> Coming Soon
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-md-4">
+        <div class="dashboard-card">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; background: linear-gradient(135deg, #ffe66d 0%, #ffd93d 100%);">
+                    <i class="bi bi-book-fill"></i>
+                </div>
+                <h5 class="card-title mb-0 ms-3">Resources</h5>
+            </div>
+            <p class="card-text text-muted">Access tips and resources for sustainable food practices.</p>
+            <button class="btn btn-secondary" disabled>
+                <i class="bi bi-clock"></i> Coming Soon
+            </button>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);">
+                    <i class="bi bi-camera-fill"></i>
+                </div>
+                <h5 class="card-title mb-0 ms-3">Uploads</h5>
+            </div>
+            <p class="card-text text-muted">Upload receipts and food labels for future scanning features.</p>
+            <button class="btn btn-secondary" disabled>
+                <i class="bi bi-clock"></i> Coming Soon
+            </button>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h5 class="card-title mb-0 ms-3">Analytics</h5>
+            </div>
+            <p class="card-text text-muted">View insights and statistics about your food consumption.</p>
+            <button class="btn btn-secondary" disabled>
+                <i class="bi bi-clock"></i> Coming Soon
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card" style="background: var(--gradient-primary); color: white;">
+            <div class="card-body text-center p-4">
+                <h4 class="mb-3">
+                    <i class="bi bi-lightbulb-fill" style="color: var(--accent-color);"></i>
+                    Ready to Reduce Food Waste?
+                </h4>
+                <p class="mb-0">Start tracking your food inventory and consumption to make a positive impact on the environment!</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
