@@ -26,10 +26,9 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('logs/', include('logs.urls')),
     path('inventory/', include('inventory.urls')),
+    path('resources/', include('resources.urls')),
     # Temporary dashboard placeholder - will be replaced when dashboard app is created
     path('dashboard/', views.dashboard_placeholder, name='dashboard_placeholder'),
-    # Resources URLs will be added later
-    # path('resources/', include('resources.urls')),
 ]
 
 # Serve media files in development

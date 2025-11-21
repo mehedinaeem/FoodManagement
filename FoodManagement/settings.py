@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'accounts',
     'logs',
     'inventory',
+    'resources',
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Resources - Food Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-primary-custom mb-0">
+            <i class="bi bi-book"></i> Sustainable Food Resources
+        </h2>
+        <p class="text-muted">Tips, guides, and resources for waste reduction, nutrition, and sustainable practices</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                <i class="bi bi-book"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ total_resources }}</h3>
+            <p class="text-muted mb-0">Total Resources</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-secondary);">
+                <i class="bi bi-tags"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--secondary-color);">{{ category_stats|length }}</h3>
+            <p class="text-muted mb-0">Categories</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-success);">
+                <i class="bi bi-star-fill"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ featured_resources|length }}</h3>
+            <p class="text-muted mb-0">Featured</p>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Resources -->
+{% if featured_resources %}
+<div class="card mb-4" style="border: 2px solid var(--primary-color);">
+    <div class="card-header text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-star-fill"></i> Featured Resources
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for resource in featured_resources %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-2">
+                            <i class="bi {{ resource.get_type_icon }} text-primary me-2" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h6 class="card-title mb-0">{{ resource.title }}</h6>
+                                <span class="badge" style="background: var(--gradient-secondary);">
+                                    {{ resource.get_category_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <p class="card-text small text-muted">{{ resource.description|truncatewords:20 }}</p>
+                        <a href="{% url 'resources:detail' resource.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-arrow-right"></i> Read More
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">
+            <i class="bi bi-funnel"></i> Filters
+        </h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                {{ filter_form.category.label_tag }}
+                {{ filter_form.category }}
+            </div>
+            <div class="col-md-3">
+                {{ filter_form.resource_type.label_tag }}
+                {{ filter_form.resource_type }}
+            </div>
+            <div class="col-md-4">
+                {{ filter_form.search.label_tag }}
+                {{ filter_form.search }}
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resources List -->
+{% if resources %}
+<div class="row g-4">
+    {% for resource in resources %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-start mb-3">
+                    <i class="bi {{ resource.get_type_icon }} text-primary me-2" style="font-size: 1.5rem;"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-1">{{ resource.title }}</h5>
+                        <div class="mb-2">
+                            <span class="badge" style="background: var(--gradient-secondary);">
+                                {{ resource.get_category_display }}
+                            </span>
+                            <span class="badge bg-light text-dark ms-1">
+                                {{ resource.get_resource_type_display }}
+                            </span>
+                            {% if resource.featured %}
+                            <span class="badge bg-warning text-dark ms-1">
+                                <i class="bi bi-star-fill"></i> Featured
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="card-text text-muted small">{{ resource.description|truncatewords:25 }}</p>
+                
+                {% if resource.url %}
+                <div class="mb-2">
+                    <small class="text-muted">
+                        <i class="bi bi-link-45deg"></i> External Link Available
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'resources:detail' resource.pk %}" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-eye"></i> View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-search" style="font-size: 4rem; color: #ccc;"></i>
+        <p class="text-muted mt-3">No resources found matching your criteria.</p>
+        <a href="{% url 'resources:list' %}" class="btn btn-primary mt-2">
+            <i class="bi bi-arrow-left"></i> View All Resources
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Category Breakdown -->
+{% if category_stats %}
+<div class="card mt-4">
+    <div class="card-header text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-pie-chart"></i> Resources by Category
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for stat in category_stats %}
+            <div class="col-md-3 col-sm-6">
+                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                    <span class="badge" style="background: var(--gradient-secondary);">
+                        {{ stat.category|title|truncatewords:2 }}
+                    </span>
+                    <strong>{{ stat.count }}</strong>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
