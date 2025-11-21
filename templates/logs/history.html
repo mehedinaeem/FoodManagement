@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Consumption History - Food Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-primary-custom mb-0">
+            <i class="bi bi-clock-history"></i> Consumption History
+        </h2>
+        <p class="text-muted">View your complete food consumption history and statistics</p>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ total_items }}</h3>
+            <p class="text-muted mb-0">Total Logged Items</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <h3 class="mb-1" style="color: var(--secondary-color);">{{ unique_items }}</h3>
+            <p class="text-muted mb-0">Unique Items</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ category_breakdown|length }}</h3>
+            <p class="text-muted mb-0">Categories Used</p>
+        </div>
+    </div>
+</div>
+
+<!-- Category Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-white">
+                <h5 class="mb-0">Category Breakdown</h5>
+            </div>
+            <div class="card-body">
+                {% if category_breakdown %}
+                    <ul class="list-group list-group-flush">
+                        {% for item in category_breakdown %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="badge" style="background: var(--gradient-secondary);">
+                                {{ item.category|title }}
+                            </span>
+                            <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center py-3">No data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-white">
+                <h5 class="mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                {% if logs %}
+                    <div class="list-group list-group-flush">
+                        {% for log in logs|slice:":10" %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ log.item_name }}</strong>
+                                    <br><small class="text-muted">{{ log.date_consumed|date:"M d, Y" }}</small>
+                                </div>
+                                <span class="badge" style="background: var(--gradient-secondary);">
+                                    {{ log.quantity }} {{ log.unit }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">No logs found</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Logs -->
+<div class="card">
+    <div class="card-header text-white">
+        <h5 class="mb-0">All Consumption Logs</h5>
+    </div>
+    <div class="card-body">
+        {% if logs %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.item_name }}</td>
+                            <td>{{ log.quantity }} {{ log.unit }}</td>
+                            <td>
+                                <span class="badge" style="background: var(--gradient-secondary);">
+                                    {{ log.get_category_display }}
+                                </span>
+                            </td>
+                            <td>{{ log.date_consumed|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'logs:detail' log.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-journal-x" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="text-muted mt-3">No consumption history found.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'logs:list' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Logs
+    </a>
+</div>
+{% endblock %}
+

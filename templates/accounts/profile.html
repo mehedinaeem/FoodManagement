@@ -107,5 +107,39 @@
         </div>
     </div>
 </div>
+
+<!-- User Statistics -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ total_logs }}</h3>
+            <p class="text-muted mb-0">Total Food Logs</p>
+            <a href="{% url 'logs:list' %}" class="btn btn-sm btn-outline-primary mt-2">View Logs</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-secondary);">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--secondary-color);">{{ total_inventory }}</h3>
+            <p class="text-muted mb-0">Total Inventory Items</p>
+            <a href="{% url 'inventory:list' %}" class="btn btn-sm btn-outline-primary mt-2">View Inventory</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dashboard-card text-center">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: var(--gradient-success);">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <h3 class="mb-1" style="color: var(--primary-color);">{{ fresh_inventory }}</h3>
+            <p class="text-muted mb-0">Fresh Items</p>
+            <a href="{% url 'inventory:list' %}?status=fresh" class="btn btn-sm btn-outline-primary mt-2">View Fresh</a>
+        </div>
+    </div>
+</div>
 {% endblock %}
 

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Food Management{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-{% if action == 'Create' %}plus-circle{% else %}pencil{% endif %}"></i> {{ title }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.item_name.id_for_label }}" class="form-label">Item Name *</label>
+                        {{ form.item_name }}
+                        {% if form.item_name.errors %}
+                            <div class="text-danger small">{{ form.item_name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity *</label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <div class="text-danger small">{{ form.quantity.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.unit.id_for_label }}" class="form-label">Unit *</label>
+                            {{ form.unit }}
+                            {% if form.unit.errors %}
+                                <div class="text-danger small">{{ form.unit.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Category *</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small">{{ form.category.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.date_consumed.id_for_label }}" class="form-label">Date Consumed *</label>
+                            {{ form.date_consumed }}
+                            {% if form.date_consumed.errors %}
+                                <div class="text-danger small">{{ form.date_consumed.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'logs:list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle-fill"></i> {{ action }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

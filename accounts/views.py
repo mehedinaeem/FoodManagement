@@ -33,7 +33,7 @@ def login_view(request):
     Handle user login.
     """
     if request.user.is_authenticated:
-        return redirect('dashboard:home')
+        return redirect('dashboard_placeholder')
     
     if request.method == 'POST':
         form = UserLoginForm(data=request.POST)
@@ -82,10 +82,21 @@ def profile_view(request):
     else:
         form = UserProfileUpdateForm(instance=profile, user=user)
     
+    # Get user statistics
+    from logs.models import FoodLog
+    from inventory.models import InventoryItem
+    
+    total_logs = FoodLog.objects.filter(user=user).count()
+    total_inventory = InventoryItem.objects.filter(user=user).count()
+    fresh_inventory = InventoryItem.objects.filter(user=user, status='fresh').count()
+    
     context = {
         'form': form,
         'profile': profile,
         'user': user,
+        'total_logs': total_logs,
+        'total_inventory': total_inventory,
+        'fresh_inventory': fresh_inventory,
     }
     
     return render(request, 'accounts/profile.html', context)

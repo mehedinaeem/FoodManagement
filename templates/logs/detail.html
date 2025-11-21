@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Log Details - Food Management{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Log Details
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="text-primary-custom">Item Information</h5>
+                        <p class="mb-2"><strong>Name:</strong> {{ log.item_name }}</p>
+                        <p class="mb-2"><strong>Quantity:</strong> {{ log.quantity }} {{ log.unit }}</p>
+                        <p class="mb-2"><strong>Category:</strong> 
+                            <span class="badge" style="background: var(--gradient-secondary);">
+                                {{ log.get_category_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-primary-custom">Date Information</h5>
+                        <p class="mb-2"><strong>Date Consumed:</strong> {{ log.date_consumed|date:"F d, Y" }}</p>
+                        <p class="mb-2"><strong>Logged On:</strong> {{ log.created_at|date:"F d, Y g:i A" }}</p>
+                        {% if log.updated_at != log.created_at %}
+                            <p class="mb-2"><strong>Last Updated:</strong> {{ log.updated_at|date:"F d, Y g:i A" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if log.notes %}
+                <div class="mb-4">
+                    <h5 class="text-primary-custom">Notes</h5>
+                    <p class="bg-light p-3 rounded">{{ log.notes }}</p>
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <a href="{% url 'logs:edit' log.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <a href="{% url 'logs:delete' log.pk %}" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                    <a href="{% url 'logs:list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

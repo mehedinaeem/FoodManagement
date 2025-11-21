@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Log - Food Management{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Delete Food Log
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="lead">Are you sure you want to delete this food log?</p>
+                
+                <div class="alert alert-warning">
+                    <strong>{{ log.item_name }}</strong><br>
+                    Quantity: {{ log.quantity }} {{ log.unit }}<br>
+                    Date: {{ log.date_consumed|date:"F d, Y" }}
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash-fill"></i> Yes, Delete
+                        </button>
+                        <a href="{% url 'logs:list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
